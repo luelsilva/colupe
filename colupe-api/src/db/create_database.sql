@@ -208,7 +208,16 @@ SET role = 'admin',
 -- ============================================================
 --  TABELAS DE CATEGORIAS E SERVIÇOS
 -- ============================================================
+--
+--  Hierarquia de 3 níveis (espelho do menu GetNinjas):
+--
+--    categories      →  Assistência técnica
+--      subcategories →    Eletrodomésticos
+--        services    →      Geladeira e Freezer
+--
+-- ============================================================
 
+-- Nível 1 — Categorias principais
 CREATE TABLE IF NOT EXISTS categories (
     id          BIGINT       PRIMARY KEY DEFAULT snowflake_id(),
     slug        TEXT         NOT NULL UNIQUE,
@@ -222,20 +231,52 @@ CREATE TABLE IF NOT EXISTS categories (
     updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON TABLE  categories             IS 'Categorias de serviço de nível 1 (ex: Assistência técnica, Aulas).';
+COMMENT ON COLUMN categories.slug        IS 'Slug único usado na URL (ex: assistencia-tecnica).';
+COMMENT ON COLUMN categories.icon        IS 'Nome do ícone Lucide ou caminho de SVG.';
+COMMENT ON COLUMN categories.order_index IS 'Ordem de exibição no menu.';
+
+-- Nível 2 — Subcategorias (grupos temáticos dentro de uma categoria)
+CREATE TABLE IF NOT EXISTS subcategories (
+    id          BIGINT       PRIMARY KEY DEFAULT snowflake_id(),
+    category_id BIGINT       NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    slug        TEXT         NOT NULL UNIQUE,
+    name        TEXT         NOT NULL,
+    description TEXT,
+    icon        TEXT,
+    is_active   BOOLEAN      NOT NULL DEFAULT true,
+    order_index INT          NOT NULL DEFAULT 0,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE  subcategories             IS 'Grupos temáticos de nível 2 dentro de uma categoria (ex: Eletrodomésticos, Informática e Telefonia).';
+COMMENT ON COLUMN subcategories.category_id IS 'Categoria pai.';
+COMMENT ON COLUMN subcategories.slug        IS 'Slug único usado na URL (ex: eletrodomesticos).';
+COMMENT ON COLUMN subcategories.order_index IS 'Ordem de exibição dentro da categoria.';
+
+-- Nível 3 — Serviços individuais (itens folha da árvore)
 CREATE TABLE IF NOT EXISTS services (
     id                BIGINT       PRIMARY KEY DEFAULT snowflake_id(),
-    category_id       BIGINT       NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    subcategory_id    BIGINT       NOT NULL REFERENCES subcategories(id) ON DELETE CASCADE,
     slug              TEXT         NOT NULL UNIQUE,
     name              TEXT         NOT NULL,
     description       TEXT,
     icon              TEXT,
-    lead_cost_credits INT          NOT NULL DEFAULT 10, -- Custo em moedas para o profissional desbloquear o lead
+    href              TEXT,        -- Caminho relativo original do GetNinjas (ex: assistencia-tecnica/geladeira-e-freezer)
+    lead_cost_credits INT          NOT NULL DEFAULT 10, -- Custo em créditos para o profissional desbloquear o lead
     form_schema       JSONB,       -- Perguntas e campos dinâmicos do formulário de solicitação
     is_active         BOOLEAN      NOT NULL DEFAULT true,
     order_index       INT          NOT NULL DEFAULT 0,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+COMMENT ON TABLE  services                  IS 'Serviços individuais de nível 3 — itens folha do catálogo (ex: Geladeira e Freezer).';
+COMMENT ON COLUMN services.subcategory_id   IS 'Subcategoria pai.';
+COMMENT ON COLUMN services.href             IS 'Caminho relativo original do GetNinjas para referência.';
+COMMENT ON COLUMN services.lead_cost_credits IS 'Custo em créditos para o profissional desbloquear um lead deste serviço.';
+COMMENT ON COLUMN services.form_schema      IS 'Schema JSONB das perguntas dinâmicas do formulário de solicitação.';
 
 
 -- ============================================================
@@ -425,6 +466,9 @@ CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW
 DROP TRIGGER IF EXISTS update_categories_updated_at ON categories;
 CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_subcategories_updated_at ON subcategories;
+CREATE TRIGGER update_subcategories_updated_at BEFORE UPDATE ON subcategories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 DROP TRIGGER IF EXISTS update_services_updated_at ON services;
 CREATE TRIGGER update_services_updated_at BEFORE UPDATE ON services FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -496,32 +540,128 @@ CREATE TRIGGER trigger_lead_unlock_count
 
 
 -- ============================================================
---  SEEDS INICIAIS (Categorias e Serviços Populares)
+--  SEEDS INICIAIS (Categorias, Subcategorias e Serviços)
 -- ============================================================
 
+-- Nível 1: Categorias principais
 INSERT INTO categories (id, slug, name, description, icon, order_index)
-VALUES 
-    (1001, 'reformas-reparos', 'Reformas e Reparos', 'Eletricistas, encanadores, pintores, pedreiros e marcenaria.', 'hammer', 1),
-    (1002, 'assistencia-tecnica', 'Assistência Técnica', 'Conserto de celulares, computadores, eletrodomésticos e TV.', 'wrench', 2),
-    (1003, 'servicos-domesticos', 'Serviços Domésticos', 'Diaristas, faxineiras, cozinheiras e passadeiras.', 'home', 3),
-    (1004, 'aulas-consultoria', 'Aulas e Consultoria', 'Aulas particulares, idiomas, reforço escolar e consultorias.', 'book-open', 4),
-    (1005, 'design-tecnologia', 'Design e Tecnologia', 'Criação de sites, logotipos, marketing e desenvolvimento.', 'laptop', 5),
-    (1006, 'eventos-festas', 'Eventos e Festas', 'Buffet, fotografia, garçons, DJs e decoração.', 'party-popper', 6)
+VALUES
+    (1001, 'assistencia-tecnica', 'Assistência técnica',  'Conserto de celulares, computadores, eletrodomésticos e TV.',       'wrench',       1),
+    (1002, 'aulas',              'Aulas',                 'Aulas particulares, idiomas, reforço escolar e esportes.',           'book-open',    2),
+    (1003, 'automoveis',         'Autos',                 'Mecânica, funilaria, pintura, elétrica e vidraçaria automotiva.',    'car',          3),
+    (1004, 'consultoria',        'Consultoria',           'Jurídico, negócios, mídia, contabilidade e consultoria pessoal.',   'briefcase',    4),
+    (1005, 'design-e-tecnologia','Design e Tecnologia',   'Criação de sites, logos, marketing digital e design gráfico.',     'laptop',       5),
+    (1006, 'eventos',            'Eventos',               'Buffet, fotografia, DJs, decoração e organização de festas.',       'party-popper', 6),
+    (1007, 'moda-e-beleza',      'Moda e beleza',         'Cabeleireiros, esteticistas, manicure, depilação e estilo.',        'scissors',     7),
+    (1008, 'reformas-e-reparos', 'Reformas e reparos',    'Eletricistas, encanadores, pintores, pedreiros e marcenaria.',      'hammer',       8),
+    (1009, 'saude',              'Saúde',                 'Médicos, psicólogos, fisioterapeutas e terapias alternativas.',     'heart-pulse',  9),
+    (1010, 'familia',            'Serviços Domésticos',   'Diaristas, babás, cozinheiras, motoristas e cuidados com pets.',   'home',         10)
 ON CONFLICT (slug) DO NOTHING;
 
-INSERT INTO services (id, category_id, slug, name, description, lead_cost_credits, order_index)
-VALUES 
-    (2001, 1001, 'eletricista', 'Eletricista', 'Instalação elétrica, troca de disjuntores, chuveiros e fiação.', 15, 1),
-    (2002, 1001, 'encanador', 'Encanador', 'Desentupimento, vazamentos, troca de torneiras e encanamento.', 15, 2),
-    (2003, 1001, 'pintor', 'Pintor Residencial e Comercial', 'Pintura interna, externa, texturas e acabamentos.', 12, 3),
-    (2004, 1002, 'conserto-celular', 'Conserto de Smartphone', 'Troca de tela, bateria, conectores e software.', 10, 1),
-    (2005, 1003, 'diarista', 'Diarista / Faxina', 'Limpeza residencial completa, pós-obra e comercial.', 10, 1),
-    (2006, 1005, 'criacao-sites', 'Criação de Sites e Landing Pages', 'Desenvolvimento de sites modernos e responsivos.', 20, 1)
+
+-- Nível 2: Subcategorias
+INSERT INTO subcategories (id, category_id, slug, name, order_index)
+VALUES
+    -- Assistência técnica (1001)
+    (2001, 1001, 'aparelhos-eletronicos',   'Aparelhos Eletrônicos',    1),
+    (2002, 1001, 'eletrodomesticos',        'Eletrodomésticos',         2),
+    (2003, 1001, 'informatica-e-telefonia', 'Informática e Telefonia',  3),
+
+    -- Aulas (1002)
+    (2004, 1002, 'academicos',              'Acadêmicos',               1),
+    (2005, 1002, 'artes-e-entretenimento',  'Artes e Entretenimento',   2),
+    (2006, 1002, 'esportes',               'Esportes',                 3),
+    (2007, 1002, 'tecnologia-aulas',       'Tecnologia',               4),
+
+    -- Autos (1003)
+    (2008, 1003, 'auto-eletrica',           'Auto Elétrica',            1),
+    (2009, 1003, 'funilaria-e-pintura',     'Funilaria e Pintura',      2),
+    (2010, 1003, 'vidracaria-automotiva',   'Vidraçaria Automotiva',    3),
+    (2011, 1003, 'mecanica',               'Mecânica',                 4),
+    (2012, 1003, 'venda-de-automoveis',     'Venda de Automóveis',      5),
+
+    -- Consultoria (1004)
+    (2013, 1004, 'midia',                  'Mídia',                    1),
+    (2014, 1004, 'negocios',               'Negócios',                 2),
+    (2015, 1004, 'juridico',               'Jurídico',                 3),
+    (2016, 1004, 'pessoal',               'Pessoal',                  4),
+
+    -- Design e Tecnologia (1005)
+    (2017, 1005, 'tecnologia-design',      'Tecnologia',               1),
+    (2018, 1005, 'grafica',               'Gráfica',                  2),
+    (2019, 1005, 'audio-visual',           'Áudio / Visual',           3),
+
+    -- Eventos (1006)
+    (2020, 1006, 'equipe-e-suporte',       'Equipe e Suporte',         1),
+    (2021, 1006, 'comes-e-bebes',          'Comes e bebes',            2),
+    (2022, 1006, 'musica-e-animacao',      'Música e animação',        3),
+    (2023, 1006, 'servicos-complementares','Serviços Complementares',  4),
+
+    -- Moda e beleza (1007)
+    (2024, 1007, 'beleza',                'Beleza',                   1),
+    (2025, 1007, 'cabelo',               'Cabelo',                   2),
+    (2026, 1007, 'estilo',               'Estilo',                   3),
+    (2027, 1007, 'artes-e-magia',         'Artes e Magia',            4),
+
+    -- Reformas e reparos (1008)
+    (2028, 1008, 'aluguel-de-maquinario',  'Aluguel de Maquinário',    1),
+    (2029, 1008, 'construcao',            'Construção',               2),
+    (2030, 1008, 'instalacao',            'Instalação',               3),
+    (2031, 1008, 'reformas-reparos-sub',   'Reformas e Reparos',       4),
+    (2032, 1008, 'servicos-gerais',        'Serviços Gerais',          5),
+    (2033, 1008, 'para-casa',             'Para Casa',                6),
+
+    -- Saúde (1009)
+    (2034, 1009, 'biomedicina-estetica',   'Biomedicina Estética',     1),
+    (2035, 1009, 'para-o-corpo',           'Para o Corpo',             2),
+    (2036, 1009, 'para-a-mente',           'Para a Mente',             3),
+    (2037, 1009, 'para-a-familia-saude',   'Para a Família',           4),
+
+    -- Serviços Domésticos (1010)
+    (2038, 1010, 'para-a-casa-dom',        'Para a Casa',              1),
+    (2039, 1010, 'para-a-familia-dom',     'Para a Família',           2),
+    (2040, 1010, 'para-os-pets',           'Para os Pets',             3)
 ON CONFLICT (slug) DO NOTHING;
+
+
+-- Nível 3: Serviços (amostra dos principais — restante via script de seed)
+INSERT INTO services (id, subcategory_id, slug, name, href, lead_cost_credits, order_index)
+VALUES
+    -- Eletrodomésticos
+    (3001, 2002, 'geladeira-e-freezer', 'Geladeira e Freezer',       'assistencia-tecnica/geladeira-e-freezer', 10, 1),
+    (3002, 2002, 'maquina-de-lavar',    'Máquina de Lavar',          'assistencia-tecnica/lava-roupa',          10, 2),
+    (3003, 2002, 'micro-ondas',         'Microondas',                'assistencia-tecnica/micro-ondas',         10, 3),
+    -- Informática e Telefonia
+    (3004, 2003, 'celular',             'Celular',                   'assistencia-tecnica/celular',             10, 1),
+    (3005, 2003, 'notebook',            'Notebook',                  'assistencia-tecnica/notebooks-e-laptops', 10, 2),
+    -- Reformas e Reparos
+    (3006, 2031, 'eletricista',         'Eletricista',               'reformas-e-reparos/eletricista',          15, 1),
+    (3007, 2031, 'encanador',           'Encanador',                 'reformas-e-reparos/encanador',            15, 2),
+    (3008, 2031, 'pintor',              'Pintor',                    'reformas-e-reparos/pintor',               12, 3),
+    -- Serviços Gerais
+    (3009, 2032, 'marido-de-aluguel',   'Marido de Aluguel',         'reformas-e-reparos/marido-de-aluguel',    10, 1),
+    (3010, 2032, 'mudancas-e-carretos', 'Mudanças e Carretos',       'reformas-e-reparos/mudancas-e-carretos',  15, 2),
+    -- Para a Casa (Domésticos)
+    (3011, 2038, 'diarista',            'Diarista',                  'familia/diarista',                        10, 1),
+    -- Para a Família (Domésticos)
+    (3012, 2039, 'baba',                'Babá',                      'familia/baba',                            10, 1),
+    (3013, 2039, 'cozinheira',          'Cozinheira',                'familia/cozinheira',                      10, 2),
+    -- Para os Pets
+    (3014, 2040, 'adestrador-de-caes',  'Adestrador de Cães',        'familia/adestrador-de-caes',              10, 1),
+    -- Design e Tecnologia
+    (3015, 2017, 'criacao-de-sites',    'Desenvolvimento de sites',  'design-e-tecnologia/desenvolvimento-de-sites-e-sistemas', 20, 1),
+    (3016, 2017, 'marketing-digital',   'Marketing digital',         'design-e-tecnologia/marketing-online',    18, 2),
+    -- Jurídico
+    (3017, 2015, 'advogado',            'Advogado',                  'consultoria/advogado',                    20, 1),
+    -- Para o Corpo
+    (3018, 2035, 'dentista',            'Dentista',                  'saude/dentista',                          15, 1),
+    (3019, 2035, 'psicologo',           'Psicólogo',                 'saude/psicologo',                         15, 2)
+ON CONFLICT (slug) DO NOTHING;
+
 
 INSERT INTO credit_packages (id, name, credits_amount, bonus_credits, price_cents, order_index)
 VALUES
-    (3001, 'Pacote Básico', 50, 0, 4990, 1),      -- R$ 49,90
-    (3002, 'Pacote Profissional', 120, 15, 9990, 2), -- R$ 99,90 (+15 bônus)
-    (3003, 'Pacote Premium', 300, 60, 19990, 3)     -- R$ 199,90 (+60 bônus)
+    (4001, 'Pacote Básico',        50,  0,  4990,  1),  -- R$  49,90
+    (4002, 'Pacote Profissional', 120, 15,  9990,  2),  -- R$  99,90 (+15 bônus)
+    (4003, 'Pacote Premium',      300, 60, 19990,  3)   -- R$ 199,90 (+60 bônus)
 ON CONFLICT DO NOTHING;
