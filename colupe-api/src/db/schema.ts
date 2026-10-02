@@ -87,6 +87,7 @@ export const profiles = pgTable("profiles", {
  * Categorias e Catálogo de Serviços
  * ==============================================================================
  */
+// Nível 1 — Categorias principais
 export const categories = pgTable("categories", {
   id: bigint("id", { mode: "bigint" }).primaryKey(),
   slug: text("slug").notNull().unique(),
@@ -100,7 +101,8 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const services = pgTable("services", {
+// Nível 2 — Subcategorias (grupos temáticos)
+export const subcategories = pgTable("subcategories", {
   id: bigint("id", { mode: "bigint" }).primaryKey(),
   categoryId: bigint("category_id", { mode: "bigint" })
     .notNull()
@@ -109,6 +111,23 @@ export const services = pgTable("services", {
   name: text("name").notNull(),
   description: text("description"),
   icon: text("icon"),
+  isActive: boolean("is_active").notNull().default(true),
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Nível 3 — Serviços individuais (itens folha)
+export const services = pgTable("services", {
+  id: bigint("id", { mode: "bigint" }).primaryKey(),
+  subcategoryId: bigint("subcategory_id", { mode: "bigint" })
+    .notNull()
+    .references(() => subcategories.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  href: text("href"),
   leadCostCredits: integer("lead_cost_credits").notNull().default(10),
   formSchema: jsonb("form_schema"),
   isActive: boolean("is_active").notNull().default(true),
@@ -319,6 +338,9 @@ export type NewProfile = typeof profiles.$inferInsert;
 
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
+
+export type Subcategory = typeof subcategories.$inferSelect;
+export type NewSubcategory = typeof subcategories.$inferInsert;
 
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;

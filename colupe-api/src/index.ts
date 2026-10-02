@@ -5,6 +5,7 @@ import { config } from "./config/env";
 import { APP_MESSAGES } from "./shared/constants/messages";
 import { healthRoutes } from "./modules/health/health.routes";
 import { infoRoutes } from "./modules/info/info.routes";
+import { catalogRoutes } from "./modules/catalog/catalog.routes";
 import { client as dbClient } from "./db";
 
 export const app = new Elysia()
@@ -27,12 +28,17 @@ export const app = new Elysia()
             name: APP_MESSAGES.SWAGGER.TAG_INFO,
             description: APP_MESSAGES.SWAGGER.TAG_INFO_DESC,
           },
+          {
+            name: "Catálogo",
+            description: "Categorias, subcategorias e serviços do catálogo.",
+          },
         ],
       },
     })
   )
   .use(healthRoutes)
   .use(infoRoutes)
+  .use(catalogRoutes)
   .get("/swagger", ({ redirect }) => redirect("/docs", 302))
   .get("/swagger/*", ({ redirect }) => redirect("/docs", 302))
   .get("/", ({ redirect }) => redirect("/docs", 302))

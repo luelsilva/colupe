@@ -1,243 +1,310 @@
 <script lang="ts">
-	import { alert } from '$lib/components/dialogs/alerts.svelte';
-	import { confirm } from '$lib/components/dialogs/confirm.svelte';
+	import { onMount } from 'svelte';
 	import {
 		ShieldAlert,
-		Users,
-		CheckCircle2,
-		XCircle,
-		Coins,
-		TrendingUp,
+		Layers,
 		FolderTree,
-		Phone,
-		MapPin
+		Wrench,
+		RefreshCw,
+		ChevronRight,
+		ToggleLeft,
+		ToggleRight,
+		Search,
+		Coins
 	} from 'lucide-svelte';
 
-	let activeTab = $state<'moderation' | 'categories' | 'metrics'>('moderation');
+	const API = 'http://localhost:3333';
 
-	// Profissionais pendentes de aprovação
-	let pendingProfessionals = $state([
-		{
-			id: '8001',
-			name: 'Marcos Eletro Instalações ME',
-			contactName: 'Marcos Pereira',
-			docType: 'CNPJ',
-			docNumber: '34.567.890/0001-12',
-			whatsapp: '(48) 99876-1122',
-			services: ['Eletricista', 'Ar-Condicionado'],
-			city: 'Criciúma',
-			state: 'SC',
-			createdAt: 'Hoje às 14:30',
-			experienceYears: 6,
-			bio: 'Especialista em instalações elétricas residenciais e comerciais, manutenção de quadros e comandos.'
-		},
-		{
-			id: '8002',
-			name: 'Juliana Reformas & Pinturas',
-			contactName: 'Juliana Machado',
-			docType: 'CPF',
-			docNumber: '089.456.123-99',
-			whatsapp: '(48) 99112-3344',
-			services: ['Pintor Residencial', 'Diarista'],
-			city: 'Içara',
-			state: 'SC',
-			createdAt: 'Hoje às 11:15',
-			experienceYears: 4,
-			bio: 'Serviços de pintura decorativa, texturas, massa corrida e limpeza fina pós-obra.'
-		}
-	]);
+	// ── Estado ─────────────────────────────────────────────────────────────────
+	type Category    = { id: string; name: string; slug: string; icon: string | null; description: string | null; isActive: boolean; orderIndex: number };
+	type Subcategory = { id: string; categoryId: string; name: string; slug: string; isActive: boolean; orderIndex: number; categoryName: string | null };
+	type Service     = { id: string; subcategoryId: string; name: string; slug: string; href: string | null; leadCostCredits: number; isActive: boolean; subcategoryName: string | null; categoryName: string | null };
 
-	async function approveProfessional(prof: typeof pendingProfessionals[0]) {
-		const ok = await confirm.show({
-			title: 'Aprovar Profissional',
-			message: `Deseja aprovar o cadastro de "${prof.name}"? O profissional receberá 20 moedas de bônus e poderá desbloquear leads imediatamente.`,
-			confirmText: 'Aprovar Cadastro',
-			cancelText: 'Cancelar'
-		});
+	let categories    = $state<Category[]>([]);
+	let subcategories = $state<Subcategory[]>([]);
+	let services      = $state<Service[]>([]);
 
-		if (ok) {
-			pendingProfessionals = pendingProfessionals.filter(p => p.id !== prof.id);
-			alert.success(`Profissional "${prof.name}" aprovado com sucesso!`);
-		}
+	let loading    = $state({ categories: true, subcategories: true, services: true });
+	let error      = $state({ categories: '', subcategories: '', services: '' });
+
+	let searchCat  = $state('');
+	let searchSub  = $state('');
+	let searchSvc  = $state('');
+
+	// Filtros por seleção
+	let selectedCategoryId    = $state<string | null>(null);
+	let selectedSubcategoryId = $state<string | null>(null);
+
+	// ── Derivados ───────────────────────────────────────────────────────────────
+	let filteredCategories = $derived(
+		categories.filter(c => c.name.toLowerCase().includes(searchCat.toLowerCase()))
+	);
+
+	let filteredSubcategories = $derived(
+		subcategories
+			.filter(s => !selectedCategoryId || s.categoryId === selectedCategoryId)
+			.filter(s => s.name.toLowerCase().includes(searchSub.toLowerCase()))
+	);
+
+	let filteredServices = $derived(
+		services
+			.filter(s => !selectedSubcategoryId || s.subcategoryId === selectedSubcategoryId)
+			.filter(s => !selectedCategoryId || subcategories.find(sub => sub.id === s.subcategoryId)?.categoryId === selectedCategoryId)
+			.filter(s => s.name.toLowerCase().includes(searchSvc.toLowerCase()))
+	);
+
+	// ── Fetch ──────────────────────────────────────────────────────────────────
+	async function fetchAll() {
+		loading = { categories: true, subcategories: true, services: true };
+		error   = { categories: '', subcategories: '', services: '' };
+
+		await Promise.all([
+			fetch(`${API}/catalog/categories`)
+				.then(r => r.json())
+				.then(j => { categories = j.data ?? []; })
+				.catch(() => { error.categories = 'Erro ao carregar categorias'; })
+				.finally(() => { loading.categories = false; }),
+
+			fetch(`${API}/catalog/subcategories`)
+				.then(r => r.json())
+				.then(j => { subcategories = j.data ?? []; })
+				.catch(() => { error.subcategories = 'Erro ao carregar subcategorias'; })
+				.finally(() => { loading.subcategories = false; }),
+
+			fetch(`${API}/catalog/services`)
+				.then(r => r.json())
+				.then(j => { services = j.data ?? []; })
+				.catch(() => { error.services = 'Erro ao carregar serviços'; })
+				.finally(() => { loading.services = false; }),
+		]);
 	}
 
-	async function rejectProfessional(prof: typeof pendingProfessionals[0]) {
-		const ok = await confirm.show({
-			title: 'Rejeitar Cadastro',
-			message: `Deseja rejeitar o cadastro de "${prof.name}"?`,
-			confirmText: 'Rejeitar',
-			cancelText: 'Voltar'
-		});
-
-		if (ok) {
-			pendingProfessionals = pendingProfessionals.filter(p => p.id !== prof.id);
-			alert.info(`Cadastro de "${prof.name}" rejeitado.`);
-		}
+	function selectCategory(id: string) {
+		selectedCategoryId    = selectedCategoryId === id ? null : id;
+		selectedSubcategoryId = null;
 	}
+
+	function selectSubcategory(id: string) {
+		selectedSubcategoryId = selectedSubcategoryId === id ? null : id;
+	}
+
+	onMount(fetchAll);
 </script>
 
-<div class="container mx-auto px-4 py-8 max-w-6xl">
-	<!-- Header do Painel Admin -->
-	<div class="border-b-2 border-base-300 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<div>
-			<div class="inline-flex items-center gap-1.5 badge badge-secondary font-bold text-xs mb-2">
-				<ShieldAlert class="w-3.5 h-3.5" /> Administração
-			</div>
-			<h1 class="text-3xl font-black">Painel de Controle Colupe</h1>
-			<p class="text-sm opacity-70">Moderação de cadastros, controle de catálogo e métricas do marketplace</p>
-		</div>
-
-		<div class="flex items-center gap-3">
-			<button
-				onclick={() => activeTab = 'moderation'}
-				class="btn btn-sm {activeTab === 'moderation' ? 'btn-primary' : 'btn-ghost'} font-bold"
-			>
-				Moderação ({pendingProfessionals.length})
-			</button>
-			<button
-				onclick={() => activeTab = 'metrics'}
-				class="btn btn-sm {activeTab === 'metrics' ? 'btn-primary' : 'btn-ghost'} font-bold"
-			>
-				Métricas
-			</button>
-		</div>
-	</div>
-
-	<!-- Cards de Resumo Geral -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-		<div class="bg-base-100 border-2 border-base-300 p-5 rounded-xl">
-			<div class="flex items-center justify-between opacity-70 text-xs font-bold uppercase mb-2">
-				<span>Prestadores Ativos</span>
-				<Users class="w-4 h-4 text-primary" />
-			</div>
-			<span class="text-3xl font-black">148</span>
-			<span class="text-xs text-success font-semibold block mt-1">+12 nesta semana</span>
-		</div>
-
-		<div class="bg-base-100 border-2 border-base-300 p-5 rounded-xl">
-			<div class="flex items-center justify-between opacity-70 text-xs font-bold uppercase mb-2">
-				<span>Pedidos Publicados</span>
-				<TrendingUp class="w-4 h-4 text-secondary" />
-			</div>
-			<span class="text-3xl font-black">384</span>
-			<span class="text-xs text-success font-semibold block mt-1">89% com contatos realizados</span>
-		</div>
-
-		<div class="bg-base-100 border-2 border-base-300 p-5 rounded-xl">
-			<div class="flex items-center justify-between opacity-70 text-xs font-bold uppercase mb-2">
-				<span>Moedas em Circulação</span>
-				<Coins class="w-4 h-4 text-warning" />
-			</div>
-			<span class="text-3xl font-black">4.250</span>
-			<span class="text-xs opacity-70 font-semibold block mt-1">R$ 4.250 em volume transacionado</span>
-		</div>
-
-		<div class="bg-base-100 border-2 border-base-300 p-5 rounded-xl">
-			<div class="flex items-center justify-between opacity-70 text-xs font-bold uppercase mb-2">
-				<span>Categorias Ativas</span>
-				<FolderTree class="w-4 h-4 text-accent" />
-			</div>
-			<span class="text-3xl font-black">6</span>
-			<span class="text-xs opacity-70 font-semibold block mt-1">32 especialidades</span>
-		</div>
-	</div>
-
-	<!-- Conteúdo da Aba Moderação -->
-	{#if activeTab === 'moderation'}
-		<div class="space-y-6">
-			<div class="flex items-center justify-between">
-				<h2 class="text-xl font-black">Cadastros de Profissionais Pendentes</h2>
-				<span class="text-xs font-bold opacity-70">{pendingProfessionals.length} aguardando análise</span>
-			</div>
-
-			{#if pendingProfessionals.length === 0}
-				<div class="bg-base-100 border-2 border-base-300 p-12 text-center rounded-xl">
-					<CheckCircle2 class="w-12 h-12 text-success mx-auto mb-3" />
-					<p class="font-bold text-lg">Tudo em dia!</p>
-					<p class="text-sm opacity-70">Nenhum cadastro de profissional aguardando moderação no momento.</p>
+<div class="min-h-screen bg-base-200">
+	<!-- ── Header ────────────────────────────────────────────────────────────── -->
+	<div class="bg-base-100 border-b-2 border-base-300 px-6 py-4">
+		<div class="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
+			<div class="flex items-center gap-3">
+				<div class="inline-flex items-center gap-1.5 badge badge-secondary font-bold text-xs">
+					<ShieldAlert class="w-3.5 h-3.5" /> Admin
 				</div>
-			{:else}
-				<div class="space-y-4">
-					{#each pendingProfessionals as prof}
-						<div class="bg-base-100 border-2 border-base-300 rounded-xl p-6 shadow-sm space-y-4">
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-base-200 pb-3">
-								<div>
-									<h3 class="text-lg font-black">{prof.name}</h3>
-									<p class="text-xs opacity-70 font-semibold">
-										Responsável: {prof.contactName} • {prof.docType}: {prof.docNumber}
-									</p>
-								</div>
-								<span class="badge badge-warning text-xs font-bold">Pendente de Moderação</span>
-							</div>
+				<div>
+					<h1 class="text-xl font-black leading-tight">Catálogo de Serviços</h1>
+					<p class="text-xs opacity-60">Categorias · Subcategorias · Serviços</p>
+				</div>
+			</div>
+			<button
+				onclick={fetchAll}
+				class="btn btn-sm btn-ghost gap-2 font-bold"
+			>
+				<RefreshCw class="w-4 h-4" /> Recarregar
+			</button>
+		</div>
+	</div>
 
-							<div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-base-200 p-4 rounded-lg">
-								<div>
-									<span class="text-xs font-bold uppercase opacity-70 block">Especialidades</span>
-									<div class="flex gap-1 flex-wrap mt-1">
-										{#each prof.services as s}
-											<span class="badge badge-sm badge-outline font-semibold">{s}</span>
-										{/each}
-									</div>
-								</div>
-								<div>
-									<span class="text-xs font-bold uppercase opacity-70 block">Localização & Contato</span>
-									<p class="font-semibold flex items-center gap-1 mt-1">
-										<MapPin class="w-3.5 h-3.5 text-primary" />
-										{prof.city} - {prof.state}
-									</p>
-									<p class="text-xs opacity-80 flex items-center gap-1 mt-0.5">
-										<Phone class="w-3 h-3 text-success" />
-										{prof.whatsapp}
-									</p>
-								</div>
-								<div>
-									<span class="text-xs font-bold uppercase opacity-70 block">Experiência & Bio</span>
-									<p class="text-xs opacity-80 mt-1 italic leading-relaxed">
-										"{prof.bio}" ({prof.experienceYears} anos de exp.)
-									</p>
-								</div>
-							</div>
+	<!-- ── Counters ──────────────────────────────────────────────────────────── -->
+	<div class="max-w-[1600px] mx-auto px-6 pt-5 pb-0 grid grid-cols-3 gap-4">
+		{#each [
+			{ label: 'Categorias',    count: categories.length,    icon: FolderTree, color: 'text-primary'   },
+			{ label: 'Subcategorias', count: subcategories.length, icon: Layers,     color: 'text-secondary' },
+			{ label: 'Serviços',      count: services.length,      icon: Wrench,     color: 'text-accent'    },
+		] as stat}
+			<div class="bg-base-100 border-2 border-base-300 rounded-xl px-5 py-3 flex items-center gap-3">
+				<stat.icon class="w-6 h-6 {stat.color} shrink-0" />
+				<div>
+					<p class="text-2xl font-black leading-none">{stat.count}</p>
+					<p class="text-xs opacity-60 font-semibold">{stat.label}</p>
+				</div>
+			</div>
+		{/each}
+	</div>
 
-							<div class="flex justify-end gap-3 pt-2">
-								<button
-									onclick={() => rejectProfessional(prof)}
-									class="btn btn-sm btn-outline btn-error font-bold gap-1.5"
-								>
-									<XCircle class="w-4 h-4" /> Rejeitar
-								</button>
-								<button
-									onclick={() => approveProfessional(prof)}
-									class="btn btn-sm btn-success font-bold gap-1.5"
-								>
-									<CheckCircle2 class="w-4 h-4" /> Aprovar e Liberar Acesso
-								</button>
+	<!-- ── 3 painéis ─────────────────────────────────────────────────────────── -->
+	<div class="max-w-[1600px] mx-auto px-6 py-5 grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+
+		<!-- ── Painel 1: Categorias ────────────────────────────────────────────── -->
+		<div class="bg-base-100 border-2 border-base-300 rounded-xl flex flex-col overflow-hidden">
+			<!-- cabeçalho -->
+			<div class="px-4 pt-4 pb-3 border-b border-base-200">
+				<div class="flex items-center gap-2 mb-3">
+					<FolderTree class="w-4 h-4 text-primary shrink-0" />
+					<h2 class="font-black text-sm">Categorias</h2>
+					{#if selectedCategoryId}
+						<button onclick={() => { selectedCategoryId = null; selectedSubcategoryId = null; }}
+							class="ml-auto badge badge-primary badge-sm cursor-pointer font-bold">
+							limpar filtro ✕
+						</button>
+					{/if}
+				</div>
+				<label class="input input-sm input-bordered flex items-center gap-2 w-full">
+					<Search class="w-3.5 h-3.5 opacity-50 shrink-0" />
+					<input type="text" placeholder="Buscar..." bind:value={searchCat} class="grow text-xs" />
+				</label>
+			</div>
+
+			<!-- lista -->
+			<div class="overflow-y-auto max-h-[calc(100vh-260px)]">
+				{#if loading.categories}
+					<div class="flex items-center justify-center py-12 gap-2 opacity-50">
+						<span class="loading loading-spinner loading-sm"></span>
+						<span class="text-xs">Carregando...</span>
+					</div>
+				{:else if error.categories}
+					<p class="text-error text-xs text-center py-8 px-4">{error.categories}</p>
+				{:else if filteredCategories.length === 0}
+					<p class="text-xs text-center py-8 opacity-50">Nenhuma categoria encontrada</p>
+				{:else}
+					{#each filteredCategories as cat}
+						{@const isSelected = selectedCategoryId === cat.id}
+						<button
+							onclick={() => selectCategory(cat.id)}
+							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3
+								{isSelected ? 'bg-primary/10 border-l-2 border-l-primary' : ''}"
+						>
+							<span class="text-lg w-7 text-center shrink-0">{cat.icon ?? '📂'}</span>
+							<div class="flex-1 min-w-0">
+								<p class="font-bold text-sm truncate">{cat.name}</p>
+								<p class="text-xs opacity-50 truncate">{cat.slug}</p>
+							</div>
+							<div class="flex items-center gap-1.5 shrink-0">
+								{#if cat.isActive}
+									<ToggleRight class="w-4 h-4 text-success" />
+								{:else}
+									<ToggleLeft class="w-4 h-4 opacity-30" />
+								{/if}
+								<ChevronRight class="w-3.5 h-3.5 opacity-30 {isSelected ? 'text-primary opacity-100' : ''}" />
+							</div>
+						</button>
+					{/each}
+				{/if}
+			</div>
+		</div>
+
+		<!-- ── Painel 2: Subcategorias ─────────────────────────────────────────── -->
+		<div class="bg-base-100 border-2 border-base-300 rounded-xl flex flex-col overflow-hidden">
+			<div class="px-4 pt-4 pb-3 border-b border-base-200">
+				<div class="flex items-center gap-2 mb-3">
+					<Layers class="w-4 h-4 text-secondary shrink-0" />
+					<h2 class="font-black text-sm">Subcategorias</h2>
+					{#if selectedCategoryId}
+						<span class="ml-auto badge badge-secondary badge-sm font-semibold text-xs">
+							filtradas por categoria
+						</span>
+					{/if}
+				</div>
+				<label class="input input-sm input-bordered flex items-center gap-2 w-full">
+					<Search class="w-3.5 h-3.5 opacity-50 shrink-0" />
+					<input type="text" placeholder="Buscar..." bind:value={searchSub} class="grow text-xs" />
+				</label>
+			</div>
+
+			<div class="overflow-y-auto max-h-[calc(100vh-260px)]">
+				{#if loading.subcategories}
+					<div class="flex items-center justify-center py-12 gap-2 opacity-50">
+						<span class="loading loading-spinner loading-sm"></span>
+						<span class="text-xs">Carregando...</span>
+					</div>
+				{:else if error.subcategories}
+					<p class="text-error text-xs text-center py-8 px-4">{error.subcategories}</p>
+				{:else if filteredSubcategories.length === 0}
+					<p class="text-xs text-center py-8 opacity-50">
+						{selectedCategoryId ? 'Nenhuma subcategoria nesta categoria' : 'Nenhuma subcategoria encontrada'}
+					</p>
+				{:else}
+					{#each filteredSubcategories as sub}
+						{@const isSelected = selectedSubcategoryId === sub.id}
+						<button
+							onclick={() => selectSubcategory(sub.id)}
+							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3
+								{isSelected ? 'bg-secondary/10 border-l-2 border-l-secondary' : ''}"
+						>
+							<div class="flex-1 min-w-0">
+								<p class="font-bold text-sm truncate">{sub.name}</p>
+								<p class="text-xs opacity-40 truncate">{sub.categoryName ?? '—'}</p>
+							</div>
+							<div class="flex items-center gap-1.5 shrink-0">
+								{#if sub.isActive}
+									<ToggleRight class="w-4 h-4 text-success" />
+								{:else}
+									<ToggleLeft class="w-4 h-4 opacity-30" />
+								{/if}
+								<ChevronRight class="w-3.5 h-3.5 opacity-30 {isSelected ? 'text-secondary opacity-100' : ''}" />
+							</div>
+						</button>
+					{/each}
+				{/if}
+			</div>
+		</div>
+
+		<!-- ── Painel 3: Serviços ──────────────────────────────────────────────── -->
+		<div class="bg-base-100 border-2 border-base-300 rounded-xl flex flex-col overflow-hidden">
+			<div class="px-4 pt-4 pb-3 border-b border-base-200">
+				<div class="flex items-center gap-2 mb-3">
+					<Wrench class="w-4 h-4 text-accent shrink-0" />
+					<h2 class="font-black text-sm">Serviços</h2>
+					{#if selectedSubcategoryId || selectedCategoryId}
+						<span class="ml-auto badge badge-accent badge-sm font-semibold text-xs">
+							filtrados
+						</span>
+					{/if}
+				</div>
+				<label class="input input-sm input-bordered flex items-center gap-2 w-full">
+					<Search class="w-3.5 h-3.5 opacity-50 shrink-0" />
+					<input type="text" placeholder="Buscar..." bind:value={searchSvc} class="grow text-xs" />
+				</label>
+			</div>
+
+			<div class="overflow-y-auto max-h-[calc(100vh-260px)]">
+				{#if loading.services}
+					<div class="flex items-center justify-center py-12 gap-2 opacity-50">
+						<span class="loading loading-spinner loading-sm"></span>
+						<span class="text-xs">Carregando...</span>
+					</div>
+				{:else if error.services}
+					<p class="text-error text-xs text-center py-8 px-4">{error.services}</p>
+				{:else if filteredServices.length === 0}
+					<p class="text-xs text-center py-8 opacity-50">
+						{selectedSubcategoryId ? 'Nenhum serviço nesta subcategoria' : 'Nenhum serviço encontrado'}
+					</p>
+				{:else}
+					{#each filteredServices as svc}
+						<div class="px-4 py-3 border-b border-base-200 last:border-0 flex items-start gap-3 hover:bg-base-200 transition-colors">
+							<div class="flex-1 min-w-0">
+								<p class="font-bold text-sm truncate">{svc.name}</p>
+								<p class="text-xs opacity-40 truncate">
+									{svc.categoryName ?? '—'} › {svc.subcategoryName ?? '—'}
+								</p>
+								{#if svc.href}
+									<p class="text-xs opacity-30 truncate font-mono mt-0.5">{svc.href}</p>
+								{/if}
+							</div>
+							<div class="flex flex-col items-end gap-1 shrink-0">
+								<div class="flex items-center gap-1 badge badge-sm badge-ghost font-bold">
+									<Coins class="w-3 h-3 text-warning" />
+									{svc.leadCostCredits}
+								</div>
+								{#if svc.isActive}
+									<ToggleRight class="w-4 h-4 text-success" />
+								{:else}
+									<ToggleLeft class="w-4 h-4 opacity-30" />
+								{/if}
 							</div>
 						</div>
 					{/each}
-				</div>
-			{/if}
-		</div>
-	{:else}
-		<!-- Métricas -->
-		<div class="bg-base-100 border-2 border-base-300 p-8 rounded-xl">
-			<h2 class="text-xl font-black mb-4">Relatório de Desempenho do Marketplace</h2>
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<div class="border border-base-300 p-4 rounded-lg">
-					<span class="text-xs font-bold uppercase opacity-70 block">Taxa de Conversão de Leads</span>
-					<span class="text-2xl font-black text-success">92.4%</span>
-					<p class="text-xs opacity-75 mt-1">Pedidos com ao menos 1 profissional que desbloqueou o contato.</p>
-				</div>
-				<div class="border border-base-300 p-4 rounded-lg">
-					<span class="text-xs font-bold uppercase opacity-70 block">Tempo Médio de Primeiro Contato</span>
-					<span class="text-2xl font-black text-primary">14 min</span>
-					<p class="text-xs opacity-75 mt-1">Agilidade no atendimento ao cliente final.</p>
-				</div>
-				<div class="border border-base-300 p-4 rounded-lg">
-					<span class="text-xs font-bold uppercase opacity-70 block">Avaliação Média dos Prestadores</span>
-					<span class="text-2xl font-black text-warning">4.88 / 5.0</span>
-					<p class="text-xs opacity-75 mt-1">Baseado em 210 avaliações de clientes.</p>
-				</div>
+				{/if}
 			</div>
 		</div>
-	{/if}
+
+	</div>
 </div>
