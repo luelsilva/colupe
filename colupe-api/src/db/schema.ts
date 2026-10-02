@@ -53,12 +53,12 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
  */
 export const snowflakeState = pgTable("snowflake_state", {
   workerId: integer("worker_id").primaryKey(),
-  lastMs: bigint("last_ms", { mode: "bigint" }).notNull().default(0n),
+  lastMs: bigint("last_ms", { mode: "number" }).notNull().default(0),
   sequence: integer("sequence").notNull().default(-1),
 });
 
 export const keepAlive = pgTable("keep_alive", {
-  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  id: bigserial("id", { mode: "number" }).primaryKey(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -68,7 +68,7 @@ export const keepAlive = pgTable("keep_alive", {
  * ==============================================================================
  */
 export const profiles = pgTable("profiles", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   fullName: text("full_name").notNull(),
@@ -89,7 +89,7 @@ export const profiles = pgTable("profiles", {
  */
 // Nível 1 — Categorias principais
 export const categories = pgTable("categories", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),
@@ -103,8 +103,8 @@ export const categories = pgTable("categories", {
 
 // Nível 2 — Subcategorias (grupos temáticos)
 export const subcategories = pgTable("subcategories", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  categoryId: bigint("category_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  categoryId: bigint("category_id", { mode: "number" })
     .notNull()
     .references(() => categories.id, { onDelete: "cascade" }),
   slug: text("slug").notNull().unique(),
@@ -119,8 +119,8 @@ export const subcategories = pgTable("subcategories", {
 
 // Nível 3 — Serviços individuais (itens folha)
 export const services = pgTable("services", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  subcategoryId: bigint("subcategory_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  subcategoryId: bigint("subcategory_id", { mode: "number" })
     .notNull()
     .references(() => subcategories.id, { onDelete: "cascade" }),
   slug: text("slug").notNull().unique(),
@@ -142,7 +142,7 @@ export const services = pgTable("services", {
  * ==============================================================================
  */
 export const professionalProfiles = pgTable("professional_profiles", {
-  id: bigint("id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" })
     .primaryKey()
     .references(() => profiles.id, { onDelete: "cascade" }),
   documentType: text("document_type").notNull().default("CPF"),
@@ -168,10 +168,10 @@ export const professionalProfiles = pgTable("professional_profiles", {
 export const professionalServices = pgTable(
   "professional_services",
   {
-    professionalId: bigint("professional_id", { mode: "bigint" })
+    professionalId: bigint("professional_id", { mode: "number" })
       .notNull()
       .references(() => professionalProfiles.id, { onDelete: "cascade" }),
-    serviceId: bigint("service_id", { mode: "bigint" })
+    serviceId: bigint("service_id", { mode: "number" })
       .notNull()
       .references(() => services.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -180,8 +180,8 @@ export const professionalServices = pgTable(
 );
 
 export const professionalPortfolio = pgTable("professional_portfolio", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  professionalId: bigint("professional_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  professionalId: bigint("professional_id", { mode: "number" })
     .notNull()
     .references(() => professionalProfiles.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
@@ -197,11 +197,11 @@ export const professionalPortfolio = pgTable("professional_portfolio", {
  * ==============================================================================
  */
 export const serviceRequests = pgTable("service_requests", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  clientId: bigint("client_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  clientId: bigint("client_id", { mode: "number" })
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
-  serviceId: bigint("service_id", { mode: "bigint" })
+  serviceId: bigint("service_id", { mode: "number" })
     .notNull()
     .references(() => services.id, { onDelete: "restrict" }),
   title: text("title").notNull(),
@@ -223,11 +223,11 @@ export const serviceRequests = pgTable("service_requests", {
 });
 
 export const leadUnlocks = pgTable("lead_unlocks", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  requestId: bigint("request_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  requestId: bigint("request_id", { mode: "number" })
     .notNull()
     .references(() => serviceRequests.id, { onDelete: "cascade" }),
-  professionalId: bigint("professional_id", { mode: "bigint" })
+  professionalId: bigint("professional_id", { mode: "number" })
     .notNull()
     .references(() => professionalProfiles.id, { onDelete: "cascade" }),
   creditsSpent: integer("credits_spent").notNull(),
@@ -244,14 +244,14 @@ export const leadUnlocks = pgTable("lead_unlocks", {
  * ==============================================================================
  */
 export const reviews = pgTable("reviews", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  requestId: bigint("request_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  requestId: bigint("request_id", { mode: "number" })
     .notNull()
     .references(() => serviceRequests.id, { onDelete: "cascade" }),
-  clientId: bigint("client_id", { mode: "bigint" })
+  clientId: bigint("client_id", { mode: "number" })
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
-  professionalId: bigint("professional_id", { mode: "bigint" })
+  professionalId: bigint("professional_id", { mode: "number" })
     .notNull()
     .references(() => professionalProfiles.id, { onDelete: "cascade" }),
   rating: integer("rating").notNull(),
@@ -268,7 +268,7 @@ export const reviews = pgTable("reviews", {
  * ==============================================================================
  */
 export const creditPackages = pgTable("credit_packages", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey(),
   name: text("name").notNull(),
   creditsAmount: integer("credits_amount").notNull(),
   bonusCredits: integer("bonus_credits").notNull().default(0),
@@ -279,15 +279,15 @@ export const creditPackages = pgTable("credit_packages", {
 });
 
 export const creditTransactions = pgTable("credit_transactions", {
-  id: bigint("id", { mode: "bigint" }).primaryKey(),
-  professionalId: bigint("professional_id", { mode: "bigint" })
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  professionalId: bigint("professional_id", { mode: "number" })
     .notNull()
     .references(() => professionalProfiles.id, { onDelete: "cascade" }),
   amount: integer("amount").notNull(),
   balanceAfter: integer("balance_after").notNull(),
   type: transactionTypeEnum("type").notNull(),
   description: text("description").notNull(),
-  referenceId: bigint("reference_id", { mode: "bigint" }),
+  referenceId: bigint("reference_id", { mode: "number" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -297,8 +297,8 @@ export const creditTransactions = pgTable("credit_transactions", {
  * ==============================================================================
  */
 export const otpCodes = pgTable("otp_codes", {
-  id: bigserial("id", { mode: "bigint" }).primaryKey(),
-  userId: bigint("user_id", { mode: "bigint" })
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  userId: bigint("user_id", { mode: "number" })
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
   code: text("code").notNull(),
@@ -308,8 +308,8 @@ export const otpCodes = pgTable("otp_codes", {
 });
 
 export const refreshTokens = pgTable("refresh_tokens", {
-  id: bigserial("id", { mode: "bigint" }).primaryKey(),
-  userId: bigint("user_id", { mode: "bigint" })
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  userId: bigint("user_id", { mode: "number" })
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
   tokenHash: text("token_hash").notNull().unique(),
@@ -319,8 +319,8 @@ export const refreshTokens = pgTable("refresh_tokens", {
 });
 
 export const activityLogs = pgTable("activity_logs", {
-  id: bigserial("id", { mode: "bigint" }).primaryKey(),
-  userId: bigint("user_id", { mode: "bigint" }).references(() => profiles.id, {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  userId: bigint("user_id", { mode: "number" }).references(() => profiles.id, {
     onDelete: "set null",
   }),
   action: text("action").notNull(),
