@@ -1,0 +1,48 @@
+services:
+
+  # ── API ─────────────────────────────────────────────────────────────────────
+  colupe-api:
+    build:
+      context: ./colupe-api
+      dockerfile: Dockerfile
+    container_name: colupe-api
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    env_file:
+      - ./colupe-api/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+    # wget está disponível no bun:1-slim; curl não está
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3333/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ── UI ──────────────────────────────────────────────────────────────────────
+  colupe-ui:
+    build:
+      context: ./colupe-ui
+      dockerfile: Dockerfile
+    container_name: colupe-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      # Ponto de acesso interno à API (ajuste conforme sua configuração)
+      PUBLIC_API_URL: http://colupe-api:3333
+    depends_on:
+      colupe-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
