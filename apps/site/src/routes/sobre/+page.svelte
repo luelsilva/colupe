@@ -1,0 +1,16 @@
+<section class="py-16 px-4 max-w-4xl mx-auto prose">
+	<h1>Sobre o Colupe</h1>
+	<p>
+		O <strong>Colupe</strong> é uma plataforma moderna desenvolvida para simplificar a contratação de serviços locais e remotos no Brasil.
+	</p>
+	<h2>Nossa Missão</h2>
+	<p>
+		Conectar pessoas que precisam de soluções rápidas e eficientes com os profissionais autônomos mais preparados da sua região, com transparência e sem intermediários na negociação final.
+	</p>
+	<h2>Por que escolher o Colupe?</h2>
+	<ul>
+		<li><strong>Transparência:</strong> Avaliações e histórico real de cada profissional.</li>
+		<li><strong>Sem Taxas Ocultas:</strong> Clientes não pagam nada para solicitar orçamentos.</li>
+		<li><strong>Agilidade:</strong> Contato direto via WhatsApp em poucos minutos.</li>
+	</ul>
+</section>

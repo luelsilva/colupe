@@ -1,0 +1,15 @@
+export const APP_ERRORS = {
+  INTERNAL_SERVER_ERROR: "Ocorreu um erro interno no servidor.",
+  NOT_FOUND: "Recurso solicitado não foi encontrado.",
+  BAD_REQUEST: "Parâmetros inválidos enviados na requisição.",
+  UNAUTHORIZED: "Não autorizado para acessar este recurso.",
+  FORBIDDEN: "Acesso proibido.",
+  USER_ALREADY_EXISTS: "Já existe um usuário cadastrado com este e-mail.",
+  INVALID_CREDENTIALS: "E-mail ou senha incorretos.",
+  INSUFFICIENT_CREDITS: "Saldo de moedas/créditos insuficiente para desbloquear este lead.",
+  LEAD_ALREADY_UNLOCKED: "Você já desbloqueou o contato deste pedido.",
+  LEAD_MAX_UNLOCKS_REACHED: "Este pedido já atingiu o limite máximo de profissionais interessados.",
+  PROFESSIONAL_NOT_VERIFIED: "Seu cadastro de profissional ainda está em análise pela moderação.",
+  PROFESSIONAL_SUSPENDED: "Seu perfil profissional está temporariamente suspenso.",
+  DATABASE_CONNECTION_ERROR: "Erro de comunicação com a base de dados.",
+} as const;

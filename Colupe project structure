@@ -1,0 +1,85 @@
+colupe/
+├── package.json                   # Configuração de workspaces do Bun
+├── bun.lock                       # Lockfile do Bun
+│
+├── apps/                          # 🚀 Aplicações independentes
+│   │
+│   ├── api/                       # 🟢 Backend / API Modular (Bun)
+│   │   ├── src/
+│   │   │   ├── server.ts          # Inicialização do servidor HTTP e portas
+│   │   │   ├── config/            # Validação de env (Require Env)
+│   │   │   ├── middlewares/       # Middlewares globais (auth, cors, error handler)
+│   │   │   └── modules/           # 📦 Módulos isolados da API
+│   │   │       ├── auth/
+│   │   │       │   ├── auth.routes.ts
+│   │   │       │   ├── auth.service.ts
+│   │   │       │   └── auth.schema.ts
+│   │   │       ├── users/
+│   │   │       │   ├── users.routes.ts
+│   │   │       │   ├── users.service.ts
+│   │   │       │   └── users.schema.ts
+│   │   │       └── colupe/
+│   │   │           ├── colupe.routes.ts
+│   │   │           ├── colupe.service.ts
+│   │   │           └── colupe.schema.ts
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── web/                       # 🔵 Aplicação Principal + PWA (SvelteKit)
+│   │   ├── src/
+│   │   │   ├── app.html           # HTML base (links para o manifest do PWA)
+│   │   │   ├── service-worker.ts  # ⚡ Service Worker do PWA (cache offline, sync)
+│   │   │   ├── lib/
+│   │   │   │   ├── api/           # Clientes HTTP para consumir a API
+│   │   │   │   ├── components/    # Componentes específicos do app
+│   │   │   │   └── stores/        # Estado global da aplicação
+│   │   │   └── routes/            # Rotas e páginas da plataforma logada
+│   │   │       ├── +layout.svelte
+│   │   │       ├── (auth)/        # Rotas de login / cadastro
+│   │   │       └── (dashboard)/   # Rotas internas do sistema
+│   │   ├── static/
+│   │   │   ├── manifest.webmanifest # 📱 Manifesto de instalação do PWA
+│   │   │   ├── icons/             # Ícones para PWA (192x192, 512x512)
+│   │   │   └── favicon.png
+│   │   ├── svelte.config.js
+│   │   ├── tailwind.config.ts     # DaisyUI v5 + Tailwind
+│   │   └── package.json
+│   │
+│   └── site/                      # 🟣 Site Institucional / Landing Page (SvelteKit)
+│       ├── src/
+│       │   └── routes/            # Home, Preços, Sobre, Blog, Contato
+│       │       ├── +page.svelte
+│       │       ├── precos/
+│       │       └── sobre/
+│       ├── static/
+│       └── package.json
+│
+└── packages/                      # 🔗 Pacotes compartilhados entre apps
+    │
+    ├── database/                  # 🗄️ Drizzle ORM + Supabase Connection
+    │   ├── src/
+    │   │   ├── client.ts          # Conexão Pooler Supabase (porta 6543)
+    │   │   ├── index.ts           # Exportações gerais
+    │   │   └── schema/            # Schemas do Drizzle
+    │   │       ├── auth.schema.ts
+    │   │       ├── users.schema.ts
+    │   │       └── colupe.schema.ts
+    │   └── package.json
+    │
+    ├── shared/                    # 📚 Regras comuns e utilitários
+    │   ├── src/
+    │   │   ├── constants/         # Dicionários centralizados de mensagens e erros
+    │   │   │   ├── errors.ts
+    │   │   │   └── messages.ts
+    │   │   ├── utils/
+    │   │   │   ├── env.ts         # Validador Require Env
+    │   │   │   └── snowflake.ts   # Gerador de IDs Snowflake
+    │   │   └── types/             # Tipos e DTOs compartilhados
+    │   └── package.json
+    │
+    └── ui/                        # 🎨 Design System e Componentes Svelte Reutilizáveis
+        ├── src/
+        │   ├── components/        # Botões, Inputs, Cards (DaisyUI v5)
+        │   ├── dialogs/           # Modais, Diálogos e Alertas
+        │   └── index.ts
+        └── package.json
