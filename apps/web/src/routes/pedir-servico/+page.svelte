@@ -213,16 +213,16 @@
 
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<div>
-							<label class="label text-xs font-bold uppercase">Seu Nome *</label>
-							<input type="text" bind:value={clientName} placeholder="Nome completo" class="input input-bordered w-full" required />
+							<label for="client-name" class="label text-xs font-bold uppercase">Seu Nome *</label>
+							<input id="client-name" type="text" bind:value={clientName} placeholder="Nome completo" class="input input-bordered w-full" required />
 						</div>
 						<div>
-							<label class="label text-xs font-bold uppercase">Seu WhatsApp / Telefone *</label>
-							<input type="tel" bind:value={clientPhone} placeholder="(48) 99999-9999" class="input input-bordered w-full" required />
+							<label for="client-phone" class="label text-xs font-bold uppercase">Seu WhatsApp / Telefone *</label>
+							<input id="client-phone" type="tel" bind:value={clientPhone} placeholder="(48) 99999-9999" class="input input-bordered w-full" required />
 						</div>
 						<div>
-							<label class="label text-xs font-bold uppercase">Seu E-mail *</label>
-							<input type="email" bind:value={clientEmail} placeholder="email@exemplo.com" class="input input-bordered w-full" required />
+							<label for="client-email" class="label text-xs font-bold uppercase">Seu E-mail *</label>
+							<input id="client-email" type="email" bind:value={clientEmail} placeholder="email@exemplo.com" class="input input-bordered w-full" required />
 						</div>
 					</div>
 				</div>

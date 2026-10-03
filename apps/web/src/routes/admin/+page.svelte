@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { CategoryIcon } from '@colupe/ui';
 	import {
 		ShieldAlert,
 		Layers,
@@ -172,7 +173,9 @@
 							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3
 								{isSelected ? 'bg-primary/10 border-l-2 border-l-primary' : ''}"
 						>
-							<span class="text-lg w-7 text-center shrink-0">{cat.icon ?? '📂'}</span>
+							<div class="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center text-primary shrink-0">
+								<CategoryIcon name={cat.icon} class="w-4 h-4" />
+							</div>
 							<div class="flex-1 min-w-0">
 								<p class="font-bold text-sm truncate">{cat.name}</p>
 								<p class="text-xs opacity-50 truncate">{cat.slug}</p>
