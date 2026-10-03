@@ -34,7 +34,7 @@
 		<nav>
 			<h6 class="footer-title">Institucional</h6>
 			<a href="/sobre" class="link link-hover">Sobre Nós</a>
-			<a href="/precos" class="link link-hover">Planos e Moedas</a>
+			<a href="/precos" class="link link-hover">Planos e Colupas</a>
 			<a href="/" class="link link-hover">Termos de Uso</a>
 		</nav>
 	</footer>

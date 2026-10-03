@@ -1169,7 +1169,7 @@ var options = {
 		app: ({ head, body, assets, nonce, env }) => "<!doctype html>\n<html lang=\"pt-BR\" data-theme=\"light\">\n	<head>\n		<meta charset=\"utf-8\" />\n		<link rel=\"icon\" href=\"/favicon.svg\" />\n		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n		<meta name=\"theme-color\" content=\"#5f4391\" />\n		<title>Colupe - Conectando Clientes e Profissionais</title>\n		" + head + "\n	</head>\n	<body class=\"min-h-screen bg-base-100 text-base-content antialiased\">\n		<div style=\"display: contents\">" + body + "</div>\n	</body>\n</html>\n",
 		error: error_template_default
 	},
-	version_hash: "19f61xs"
+	version_hash: "woejkr"
 };
 async function get_hooks() {
 	let handle;
@@ -2335,4 +2335,4 @@ var validate_page_server_exports = validator(valid_page_server_exports);
 //#endregion
 export { stringify as A, options as B, get_status as C, parse as D, once as E, Redirect as F, set_public_env as G, read_implementation as H, SvelteKitError as I, assets as J, set_read_implementation as K, __commonJSMin as L, text_encoder as M, ActionFailure as N, parse_remote_arg as O, HttpError as P, get_hooks as R, get_relative_path as S, normalize_error as T, set_manifest as U, public_env as V, set_private_env as W, override as X, base as Y, reset as Z, TRAILING_SLASH_PARAM as _, make_trackable as a, create_remote_key as b, resolve as c, validate_page_exports as d, validate_page_server_exports as f, INVALIDATED_PARAM as g, with_request_store as h, hash as i, stringify$1 as j, split_remote_key as k, validate_layout_exports as l, merge_tracing as m, disable_search as n, normalize_path as o, writable as p, app_dir as q, find_route as r, readable as s, decode_pathname as t, validate_layout_server_exports as u, base64_encode as v, noop as w, get_message as x, coalesce_to_error as y, index_server_exports as z };
 
-//# sourceMappingURL=exports-DMhouWw-.js.map
+//# sourceMappingURL=exports-Cy3qONPA.js.map

@@ -112,7 +112,7 @@
 				<ul class="space-y-2 text-sm opacity-80">
 					<li><a href="/profissional/cadastro" class="hover:underline">Cadastre seu Negócio</a></li>
 					<li><a href="/profissional" class="hover:underline">Feed de Oportunidades</a></li>
-					<li><a href="/profissional/creditos" class="hover:underline">Pacotes de Moedas</a></li>
+					<li><a href="/profissional/creditos" class="hover:underline">Pacotes de Colupas</a></li>
 				</ul>
 			</div>
 

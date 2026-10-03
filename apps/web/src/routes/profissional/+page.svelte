@@ -89,14 +89,14 @@
 
 	async function unlockLead(lead: typeof leads[0]) {
 		if (credits < lead.costCredits) {
-			alert.error('Saldo insuficiente! Recarregue suas moedas para desbloquear este contato.');
+			alert.error('Saldo insuficiente! Recarregue suas Colupas para desbloquear este contato.');
 			return;
 		}
 
 		const ok = await confirm.show({
 			title: 'Desbloquear Contato do Cliente',
-			message: `Você deseja gastar ${lead.costCredits} moedas para ter acesso imediato ao WhatsApp, telefone e endereço completo do cliente "${lead.client.name}"?`,
-			confirmText: `Desbloquear (${lead.costCredits} moedas)`,
+			message: `Você deseja gastar ${lead.costCredits} Colupas para ter acesso imediato ao WhatsApp, telefone e endereço completo do cliente "${lead.client.name}"?`,
+			confirmText: `Desbloquear (${lead.costCredits} Colupas)`,
 			cancelText: 'Voltar'
 		});
 
@@ -129,20 +129,20 @@
 			</div>
 		</div>
 
-		<!-- Card de Moedas / Saldo -->
+		<!-- Card de Colupas / Saldo -->
 		<div class="bg-base-200 border-2 border-warning/40 p-4 rounded-xl flex items-center gap-6 w-full md:w-auto justify-between">
 			<div class="flex items-center gap-3">
 				<div class="p-2.5 bg-warning text-warning-content rounded-lg">
 					<Coins class="w-6 h-6" />
 				</div>
 				<div>
-					<span class="text-xs font-bold uppercase opacity-70 block">Saldo de Moedas</span>
-					<span class="text-2xl font-black text-warning">{credits} moedas</span>
+					<span class="text-xs font-bold uppercase opacity-70 block">Saldo de Colupas</span>
+					<span class="text-2xl font-black text-warning">{credits} Colupas</span>
 				</div>
 			</div>
 
 			<a href="/profissional/creditos" class="btn btn-sm btn-warning font-bold">
-				Comprar Moedas
+				Comprar Colupas
 			</a>
 		</div>
 	</div>
@@ -203,7 +203,7 @@
 							<div class="text-center md:text-right">
 								<span class="text-xs opacity-70 block font-semibold">Custo de Desbloqueio</span>
 								<span class="text-lg font-black text-warning flex items-center gap-1">
-									<Coins class="w-4 h-4" /> {lead.costCredits} moedas
+									<Coins class="w-4 h-4" /> {lead.costCredits} Colupas
 								</span>
 							</div>
 

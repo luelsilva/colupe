@@ -18,13 +18,13 @@ const manifest = (() => {
 		},
 		_: {
 			client: {
-				start: "_app/immutable/entry/start.BzA15czN.js",
-				app: "_app/immutable/entry/app.CSgC2XvY.js",
+				start: "_app/immutable/entry/start.CAV7PWDC.js",
+				app: "_app/immutable/entry/app.WPnfalhb.js",
 				imports: [
-					"_app/immutable/entry/start.BzA15czN.js",
-					"_app/immutable/chunks/C8yLa8zK.js",
+					"_app/immutable/entry/start.CAV7PWDC.js",
+					"_app/immutable/chunks/CNIWIAac.js",
 					"_app/immutable/chunks/CkUIrX4F.js",
-					"_app/immutable/entry/app.CSgC2XvY.js",
+					"_app/immutable/entry/app.WPnfalhb.js",
 					"_app/immutable/chunks/CkUIrX4F.js",
 					"_app/immutable/chunks/xihTtKlq.js"
 				],
@@ -33,8 +33,8 @@ const manifest = (() => {
 				uses_env_dynamic_public: false
 			},
 			nodes: [
-				__memo(() => import("./chunks/0-ZsT04hSx.js")),
-				__memo(() => import("./chunks/1-B06qPJlu.js")),
+				__memo(() => import("./chunks/0-5dVUUov4.js")),
+				__memo(() => import("./chunks/1-u0UsQCIc.js")),
 				__memo(() => import("./chunks/2-CiOLHHvM.js")),
 				__memo(() => import("./chunks/3-DQATfAvx.js")),
 				__memo(() => import("./chunks/4-BoCC2CMm.js"))

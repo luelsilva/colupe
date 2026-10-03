@@ -60,7 +60,7 @@
 			</div>
 			<h2 class="text-3xl font-black mb-2">Cadastro Enviado para Análise!</h2>
 			<p class="text-base opacity-80 max-w-lg mx-auto mb-6">
-				Nossa equipe revisará suas informações em até 24 horas. Assim que aprovado, você receberá <strong>20 moedas de bônus</strong> para começar a desbloquear contatos de clientes.
+				Nossa equipe revisará suas informações em até 24 horas. Assim que aprovado, você receberá <strong>20 Colupas de bônus</strong> para começar a desbloquear contatos de clientes.
 			</p>
 			<a href="/profissional" class="btn btn-primary font-bold px-8">
 				Acessar Área do Profissional
@@ -197,7 +197,7 @@
 							<span class="loading loading-spinner"></span>
 							Finalizando Cadastro...
 						{:else}
-							Concluir Cadastro e Ganhar 20 Moedas de Bônus
+							Concluir Cadastro e Ganhar 20 Colupas de Bônus
 							<ArrowRight class="w-5 h-5" />
 						{/if}
 					</button>

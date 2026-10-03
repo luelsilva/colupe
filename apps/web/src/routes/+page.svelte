@@ -222,7 +222,7 @@
 				<span class="badge badge-warning font-bold text-xs uppercase mb-3">Para Prestadores</span>
 				<h2 class="text-3xl font-black mb-3">Você é um profissional autônomo ou empresa?</h2>
 				<p class="text-sm opacity-80 leading-relaxed mb-6">
-					Aumente sua cartela de clientes e receba pedidos diários na sua área de atuação. Cadastre-se agora e ganhe moedas de bônus para começar a desbloquear contatos.
+					Aumente sua cartela de clientes e receba pedidos diários na sua área de atuação. Cadastre-se agora e ganhe Colupas de bônus para começar a desbloquear contatos.
 				</p>
 				<div class="flex items-center gap-4 flex-wrap">
 					<div class="flex items-center gap-1.5 text-xs font-semibold">

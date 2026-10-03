@@ -166,7 +166,7 @@ export const reviews = pgTable("reviews", {
 });
 
 /**
- * Moedas / Créditos e Transações
+ * Colupas (Créditos da Plataforma) e Transações
  */
 export const creditPackages = pgTable("credit_packages", {
   id: bigint("id", { mode: "number" }).primaryKey(),

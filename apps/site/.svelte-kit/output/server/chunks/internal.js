@@ -1188,7 +1188,7 @@ var options = {
 		app: ({ head, body, assets, nonce, env }) => "<!doctype html>\n<html lang=\"pt-BR\" data-theme=\"light\">\n	<head>\n		<meta charset=\"utf-8\" />\n		<link rel=\"icon\" href=\"/favicon.svg\" />\n		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n		<meta name=\"theme-color\" content=\"#5f4391\" />\n		<title>Colupe - Conectando Clientes e Profissionais</title>\n		" + head + "\n	</head>\n	<body class=\"min-h-screen bg-base-100 text-base-content antialiased\">\n		<div style=\"display: contents\">" + body + "</div>\n	</body>\n</html>\n",
 		error: error_template_default
 	},
-	version_hash: "19f61xs"
+	version_hash: "woejkr"
 };
 async function get_hooks() {
 	let handle;

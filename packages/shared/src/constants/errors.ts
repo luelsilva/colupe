@@ -6,7 +6,7 @@ export const APP_ERRORS = {
   FORBIDDEN: "Acesso proibido.",
   USER_ALREADY_EXISTS: "Já existe um usuário cadastrado com este e-mail.",
   INVALID_CREDENTIALS: "E-mail ou senha incorretos.",
-  INSUFFICIENT_CREDITS: "Saldo de moedas/créditos insuficiente para desbloquear este lead.",
+  INSUFFICIENT_CREDITS: "Saldo de Colupas insuficiente para desbloquear este pedido.",
   LEAD_ALREADY_UNLOCKED: "Você já desbloqueou o contato deste pedido.",
   LEAD_MAX_UNLOCKS_REACHED: "Este pedido já atingiu o limite máximo de profissionais interessados.",
   PROFESSIONAL_NOT_VERIFIED: "Seu cadastro de profissional ainda está em análise pela moderação.",
