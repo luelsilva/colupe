@@ -3,18 +3,17 @@ services:
   # ── API ─────────────────────────────────────────────────────────────────────
   colupe-api:
     build:
-      context: ./colupe-api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     container_name: colupe-api
     restart: unless-stopped
     ports:
       - "3333:3333"
     env_file:
-      - ./colupe-api/.env
+      - ./apps/api/.env
     environment:
       NODE_ENV: production
       PORT: 3333
-    # wget está disponível no bun:1-slim; curl não está
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3333/health || exit 1"]
       interval: 15s
@@ -22,12 +21,12 @@ services:
       retries: 5
       start_period: 20s
 
-  # ── UI ──────────────────────────────────────────────────────────────────────
-  colupe-ui:
+  # ── WEB / PWA ───────────────────────────────────────────────────────────────
+  colupe-web:
     build:
-      context: ./colupe-ui
-      dockerfile: Dockerfile
-    container_name: colupe-ui
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: colupe-web
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -35,13 +34,32 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
-      # Ponto de acesso interno à API (ajuste conforme sua configuração)
       PUBLIC_API_URL: http://colupe-api:3333
     depends_on:
       colupe-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ── SITE INSTITUCIONAL ──────────────────────────────────────────────────────
+  colupe-site:
+    build:
+      context: .
+      dockerfile: apps/site/Dockerfile
+    container_name: colupe-site
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001 || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
