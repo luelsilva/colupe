@@ -2,8 +2,8 @@
 	import '../app.css';
 	import Alert from '$lib/components/dialogs/Alert.svelte';
 	import ConfirmModal from '$lib/components/dialogs/ConfirmModal.svelte';
+	import { Logo } from '@colupe/ui';
 	import {
-		Wrench,
 		Search,
 		Briefcase,
 		ShieldAlert,
@@ -30,12 +30,9 @@
 	<!-- Navbar Principal Sólida -->
 	<header class="border-b-2 border-base-300 bg-base-200 sticky top-0 z-50">
 		<div class="container mx-auto px-4 h-16 flex items-center justify-between">
-			<!-- Logo Colupe -->
-			<a href="/" class="flex items-center gap-2.5 font-black text-xl tracking-tight text-primary">
-				<div class="bg-primary text-primary-content p-2 rounded-lg">
-					<Wrench class="w-5 h-5" />
-				</div>
-				<span class="text-2xl font-extrabold tracking-wider">COLUPE</span>
+			<!-- Logo Colupe Oficial -->
+			<a href="/" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+				<Logo size={34} textClass="text-2xl font-black tracking-wider text-primary" />
 			</a>
 
 			<!-- Navegação Principal -->
@@ -93,9 +90,8 @@
 	<footer class="border-t-2 border-base-300 bg-base-200 py-10 mt-16">
 		<div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
 			<div>
-				<div class="flex items-center gap-2 font-black text-xl text-primary mb-3">
-					<Wrench class="w-5 h-5" />
-					<span>COLUPE</span>
+				<div class="mb-3">
+					<Logo size={28} textClass="text-xl font-black text-primary" />
 				</div>
 				<p class="text-sm opacity-75">
 					A maior plataforma para conectar clientes aos melhores profissionais e prestadores de serviços da região.

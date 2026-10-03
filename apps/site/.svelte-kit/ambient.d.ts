@@ -58,6 +58,7 @@ declare module '$env/static/private' {
 	export const npm_config_user_agent: string;
 	export const USERDOMAIN: string;
 	export const npm_node_execpath: string;
+	export const PWD: string;
 	export const USERDOMAIN_ROAMINGPROFILE: string;
 	export const ANTIGRAVITY_EDITOR_APP_ROOT: string;
 	export const VSCODE_CODE_CACHE_PATH: string;
@@ -70,8 +71,10 @@ declare module '$env/static/private' {
 	export const TEMP: string;
 	export const ANTIGRAVITY_SAFECLIS_SOURCE: string;
 	export const PROCESSOR_ARCHITECTURE: string;
+	export const npm_lifecycle_event: string;
 	export const ProgramFiles: string;
 	export const OneDrive: string;
+	export const npm_lifecycle_script: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const ANTIGRAVITY_AGENTAPI_EXE: string;
 	export const DriverData: string;
@@ -82,6 +85,7 @@ declare module '$env/static/private' {
 	export const PATHEXT: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const SystemDrive: string;
+	export const npm_command: string;
 	export const ANTIGRAVITY_AGENT: string;
 	export const VSCODE_CWD: string;
 	export const npm_config_local_prefix: string;
@@ -206,6 +210,7 @@ declare module '$env/dynamic/private' {
 		npm_config_user_agent: string;
 		USERDOMAIN: string;
 		npm_node_execpath: string;
+		PWD: string;
 		USERDOMAIN_ROAMINGPROFILE: string;
 		ANTIGRAVITY_EDITOR_APP_ROOT: string;
 		VSCODE_CODE_CACHE_PATH: string;
@@ -218,8 +223,10 @@ declare module '$env/dynamic/private' {
 		TEMP: string;
 		ANTIGRAVITY_SAFECLIS_SOURCE: string;
 		PROCESSOR_ARCHITECTURE: string;
+		npm_lifecycle_event: string;
 		ProgramFiles: string;
 		OneDrive: string;
+		npm_lifecycle_script: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		ANTIGRAVITY_AGENTAPI_EXE: string;
 		DriverData: string;
@@ -230,6 +237,7 @@ declare module '$env/dynamic/private' {
 		PATHEXT: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		SystemDrive: string;
+		npm_command: string;
 		ANTIGRAVITY_AGENT: string;
 		VSCODE_CWD: string;
 		npm_config_local_prefix: string;

@@ -3744,6 +3744,22 @@ function attributes(attrs, css_hash, classes, styles, flags = 0) {
 	return attr_str;
 }
 /**
+* @param {unknown} value
+* @returns {string}
+*/
+function stringify(value) {
+	return typeof value === "string" ? value : value == null ? "" : value + "";
+}
+/**
+* @param {any} value
+* @param {string | undefined} [hash]
+* @param {Record<string, boolean>} [directives]
+*/
+function attr_class(value, hash, directives) {
+	var result = to_class(value, hash, directives);
+	return result ? ` class="${escape_html(result, true)}"` : "";
+}
+/**
 * @template V
 * @param {() => V} get_value
 */
@@ -3770,4 +3786,4 @@ function derived(fn) {
 	};
 }
 //#endregion
-export { hydration_failed as $, invoke_error_boundary as A, source as B, branch as C, move_effect as D, effect_tracking as E, init_operations as F, queue_micro_task as G, current_batch as H, increment as I, pop$1 as J, component_context as K, internal_set as L, create_text as M, get_first_child as N, pause_effect as O, get_next_sibling as P, async_mode_flag as Q, mutable_source as R, block as S, destroy_effect as T, flushSync as U, Batch as V, defer_effect as W, set_component_context as X, push$1 as Y, tag as Z, active_reaction as _, array_from as _t, createContext as a, next as at, set_active_reaction as b, run as bt, hasContext as c, skip_nodes as ct, hydratable_clobbering as d, svelte_boundary_reset_noop as dt, svelte_boundary_reset_onerror as et, hydratable_serialization_failed as f, HYDRATION_ERROR as ft, active_effect as g, safe_not_equal as gt, is_passive_event as h, LEGACY_PROPS as ht, get_render_context as i, hydrating as it, clear_text_content as j, render_effect as k, setContext as l, hydration_mismatch as lt, escape_html as m, EFFECT_TRANSPARENT as mt, render as n, hydrate_next as nt, getAllContexts as o, set_hydrate_node as ot, lifecycle_function_unavailable as p, EFFECT_PRESERVED as pt, mark_as_component as q, get_user_code_location as r, hydrate_node as rt, getContext as s, set_hydrating as st, derived as t, experimental_async_required as tt, ssr_context as u, lifecycle_double_unmount as ut, get as v, define_property as vt, component_root as w, untrack as x, set_active_effect as y, noop as yt, set as z };
+export { push$1 as $, effect_tracking as A, increment as B, set_active_effect as C, noop as Ct, branch as D, block as E, clear_text_content as F, Batch as G, mutable_source as H, create_text as I, defer_effect as J, current_batch as K, get_first_child as L, pause_effect as M, render_effect as N, component_root as O, invoke_error_boundary as P, pop$1 as Q, get_next_sibling as R, get as S, define_property as St, untrack as T, set as U, internal_set as V, source as W, component_context as X, queue_micro_task as Y, mark_as_component as Z, clsx as _, EFFECT_PRESERVED as _t, get_user_code_location as a, experimental_async_required as at, active_effect as b, safe_not_equal as bt, getAllContexts as c, hydrating as ct, setContext as d, set_hydrating as dt, set_component_context as et, ssr_context as f, skip_nodes as ft, attr as g, HYDRATION_ERROR as gt, lifecycle_function_unavailable as h, svelte_boundary_reset_noop as ht, stringify as i, svelte_boundary_reset_onerror as it, move_effect as j, destroy_effect as k, getContext as l, next as lt, hydratable_serialization_failed as m, lifecycle_double_unmount as mt, derived as n, async_mode_flag as nt, get_render_context as o, hydrate_next as ot, hydratable_clobbering as p, hydration_mismatch as pt, flushSync as q, render as r, hydration_failed as rt, createContext as s, hydrate_node as st, attr_class as t, tag as tt, hasContext as u, set_hydrate_node as ut, escape_html as v, EFFECT_TRANSPARENT as vt, set_active_reaction as w, run as wt, active_reaction as x, array_from as xt, is_passive_event as y, LEGACY_PROPS as yt, init_operations as z };

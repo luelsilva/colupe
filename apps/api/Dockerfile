@@ -1,27 +1,16 @@
-# ─── Stage 1: deps ───────────────────────────────────────────────────────────
-FROM oven/bun:1 AS deps
+FROM oven/bun:1 AS builder
 WORKDIR /app
 
-COPY package.json bun.lock ./
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/database/package.json ./packages/database/
-COPY apps/api/package.json ./apps/api/
-
+COPY . .
 RUN bun install --frozen-lockfile
 
-# ─── Stage 2: runner ─────────────────────────────────────────────────────────
 FROM oven/bun:1-slim AS runner
 
-# wget necessário para healthcheck
 RUN apt-get update -qq && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./
-COPY packages/shared ./packages/shared
-COPY packages/database ./packages/database
-COPY apps/api ./apps/api
+COPY --from=builder /app /app
 
 WORKDIR /app/apps/api
 

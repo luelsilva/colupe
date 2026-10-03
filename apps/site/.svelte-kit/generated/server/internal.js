@@ -23,10 +23,10 @@ export const options = {
 	service_worker_options: undefined,
 	server_error_boundaries: false,
 	templates: {
-		app: ({ head, body, assets, nonce, env }) => "<!doctype html>\n<html lang=\"pt-BR\" data-theme=\"light\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<link rel=\"icon\" href=\"/favicon.svg\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\t\t<title>Colupe - Conectando Clientes e Profissionais</title>\n\t\t" + head + "\n\t</head>\n\t<body class=\"min-h-screen bg-base-100 text-base-content antialiased\">\n\t\t<div style=\"display: contents\">" + body + "</div>\n\t</body>\n</html>\n",
+		app: ({ head, body, assets, nonce, env }) => "<!doctype html>\n<html lang=\"pt-BR\" data-theme=\"light\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<link rel=\"icon\" href=\"/favicon.svg\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\t\t<meta name=\"theme-color\" content=\"#5f4391\" />\n\t\t<title>Colupe - Conectando Clientes e Profissionais</title>\n\t\t" + head + "\n\t</head>\n\t<body class=\"min-h-screen bg-base-100 text-base-content antialiased\">\n\t\t<div style=\"display: contents\">" + body + "</div>\n\t</body>\n</html>\n",
 		error
 	},
-	version_hash: "3xhdr0"
+	version_hash: "c8it3t"
 };
 
 export async function get_hooks() {

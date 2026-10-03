@@ -7,18 +7,25 @@ const manifest = (() => {
 	return {
 		appDir: "_app",
 		appPath: "_app",
-		assets: /* @__PURE__ */ new Set(["favicon.svg"]),
-		mimeTypes: { ".svg": "image/svg+xml" },
+		assets: /* @__PURE__ */ new Set([
+			"favicon.svg",
+			"icon.png",
+			"logo.png"
+		]),
+		mimeTypes: {
+			".svg": "image/svg+xml",
+			".png": "image/png"
+		},
 		_: {
 			client: {
-				start: "_app/immutable/entry/start.d_9TYJrR.js",
-				app: "_app/immutable/entry/app.JeYRUMPJ.js",
+				start: "_app/immutable/entry/start.BzA15czN.js",
+				app: "_app/immutable/entry/app.CSgC2XvY.js",
 				imports: [
-					"_app/immutable/entry/start.d_9TYJrR.js",
-					"_app/immutable/chunks/C8FBzN2w.js",
-					"_app/immutable/chunks/B99_TmvJ.js",
-					"_app/immutable/entry/app.JeYRUMPJ.js",
-					"_app/immutable/chunks/B99_TmvJ.js",
+					"_app/immutable/entry/start.BzA15czN.js",
+					"_app/immutable/chunks/C8yLa8zK.js",
+					"_app/immutable/chunks/CkUIrX4F.js",
+					"_app/immutable/entry/app.CSgC2XvY.js",
+					"_app/immutable/chunks/CkUIrX4F.js",
 					"_app/immutable/chunks/xihTtKlq.js"
 				],
 				stylesheets: [],
@@ -26,11 +33,11 @@ const manifest = (() => {
 				uses_env_dynamic_public: false
 			},
 			nodes: [
-				__memo(() => import("./chunks/0-Cyxmo80F.js")),
-				__memo(() => import("./chunks/1-tmOhnzgd.js")),
-				__memo(() => import("./chunks/2-t0rH3aBN.js")),
-				__memo(() => import("./chunks/3-DDgFt3ve.js")),
-				__memo(() => import("./chunks/4-DEklXuIN.js"))
+				__memo(() => import("./chunks/0-ZsT04hSx.js")),
+				__memo(() => import("./chunks/1-B06qPJlu.js")),
+				__memo(() => import("./chunks/2-CiOLHHvM.js")),
+				__memo(() => import("./chunks/3-DQATfAvx.js")),
+				__memo(() => import("./chunks/4-BoCC2CMm.js"))
 			],
 			remotes: {},
 			routes: [
