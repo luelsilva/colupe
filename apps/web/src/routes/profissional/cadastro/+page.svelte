@@ -66,10 +66,14 @@
 	let docType = $state<'CPF' | 'CNPJ'>('CPF');
 	let docNumber = $state('');
 
-	// Passo 5: Localização e Raio de Atendimento
-	let city = $state('Criciúma');
-	let stateUf = $state('SC');
+	// Passo 5: CEP e Raio de Atendimento
+	let cep = $state('');
+	let city = $state('');
+	let stateUf = $state('');
+	let neighborhood = $state('');
 	let serviceRadiusKm = $state(35);
+	let isLoadingCep = $state(false);
+	let cepError = $state('');
 
 	let isSubmitting = $state(false);
 	let isCompleted = $state(false);
@@ -125,6 +129,12 @@
 		}
 	}
 
+	function formatCep(val: string) {
+		const digits = val.replace(/\D/g, '').slice(0, 8);
+		if (digits.length <= 5) return digits;
+		return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+	}
+
 	function handlePhoneInput(e: Event) {
 		const target = e.target as HTMLInputElement;
 		phone = formatPhone(target.value);
@@ -133,6 +143,41 @@
 	function handleDocInput(e: Event) {
 		const target = e.target as HTMLInputElement;
 		docNumber = formatDoc(target.value, docType);
+	}
+
+	async function handleCepInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		cep = formatCep(target.value);
+		const clean = cep.replace(/\D/g, '');
+		cepError = '';
+
+		if (clean.length === 8) {
+			isLoadingCep = true;
+			try {
+				const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+				if (res.ok) {
+					const data = await res.json();
+					if (data.erro) {
+						cepError = 'CEP não encontrado.';
+						city = '';
+						stateUf = '';
+						neighborhood = '';
+					} else {
+						city = data.localidade || '';
+						stateUf = data.uf || '';
+						neighborhood = data.bairro || '';
+					}
+				}
+			} catch {
+				cepError = 'Não foi possível consultar o CEP automaticamente.';
+			} finally {
+				isLoadingCep = false;
+			}
+		} else {
+			city = '';
+			stateUf = '';
+			neighborhood = '';
+		}
 	}
 
 	// ─── FILTROS DE SERVIÇOS E CATEGORIAS ATIVAS ──────────────────────────
@@ -173,12 +218,15 @@
 		return selectedServices.filter(id => activeServices.some(s => s.id === id));
 	});
 
-	// ─── VALIDAÇÃO MATEMÁTICA DE DOCUMENTO ────────────────────────────────
+	// ─── VALIDAÇÕES ───────────────────────────────────────────────────────
 	let cleanDocLength = $derived(docNumber.replace(/\D/g, '').length);
 	let expectedDocLength = $derived(docType === 'CPF' ? 11 : 14);
 	let isDocComplete = $derived(cleanDocLength === expectedDocLength);
 	let isDocValid = $derived(validateDocument(docNumber, docType));
 	let isDocInvalid = $derived(isDocComplete && !isDocValid);
+
+	let cleanCep = $derived(cep.replace(/\D/g, ''));
+	let isCepValid = $derived(cleanCep.length === 8 && !cepError && city.length > 0);
 
 	function toggleService(id: number) {
 		if (selectedServices.includes(id)) {
@@ -243,8 +291,8 @@
 			alert.error(docType === 'CPF' ? APP_ERRORS.INVALID_CPF : APP_ERRORS.INVALID_CNPJ);
 			return;
 		}
-		if (!city.trim() || !stateUf.trim()) {
-			alert.error(APP_ERRORS.INVALID_LOCATION);
+		if (!isCepValid) {
+			alert.error(APP_ERRORS.INVALID_CEP);
 			return;
 		}
 
@@ -389,7 +437,6 @@
 								<input
 									id="input-name"
 									type="text"
-									placeholder="Ex: Carlos Eduardo Silva"
 									bind:value={fullName}
 									class="input input-bordered w-full text-base font-semibold h-13 pl-11 bg-base-100"
 									autofocus
@@ -406,7 +453,6 @@
 								<input
 									id="input-email"
 									type="email"
-									placeholder="seuemail@exemplo.com"
 									bind:value={email}
 									class="input input-bordered w-full text-base font-semibold h-13 pl-11 bg-base-100"
 								/>
@@ -422,7 +468,6 @@
 								<input
 									id="input-company"
 									type="text"
-									placeholder="Ex: Silva Instalações Elétricas"
 									bind:value={companyName}
 									class="input input-bordered w-full text-base font-semibold h-13 pl-11 bg-base-100"
 								/>
@@ -623,7 +668,7 @@
 					</button>
 				</div>
 
-			<!-- ─── PASSO 5: LOCALIZAÇÃO, RAIO & CONCLUSÃO ───────────────────── -->
+			<!-- ─── PASSO 5: LOCALIZAÇÃO POR CEP, RAIO & CONCLUSÃO ───────────── -->
 			{:else if currentStep === 5}
 				<div class="space-y-5">
 					<div class="space-y-2">
@@ -633,41 +678,56 @@
 						</div>
 						<h1 class="text-3xl lg:text-4xl font-black tracking-tight">Onde você atende?</h1>
 						<p class="text-sm opacity-70">
-							Defina sua cidade base e a distância máxima que você se desloca para realizar serviços.
+							Informe seu CEP base para calcularmos a área em que você receberá pedidos de clientes.
 						</p>
 					</div>
 
 					<div class="space-y-4 pt-1">
-						<div class="grid grid-cols-3 gap-3">
-							<div class="col-span-2">
-								<label for="input-city" class="text-xs font-bold uppercase opacity-75 mb-1.5 block">
-									Cidade Base *
+						<!-- Campo CEP -->
+						<div>
+							<div class="flex items-center justify-between mb-1.5">
+								<label for="input-cep" class="text-xs font-bold uppercase opacity-75">
+									CEP Base de Atendimento *
 								</label>
-								<div class="relative">
-									<input
-										id="input-city"
-										type="text"
-										bind:value={city}
-										class="input input-bordered w-full text-base font-semibold h-13 pl-10 bg-base-100"
-										required
-									/>
-									<MapPin class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-primary opacity-80" />
-								</div>
+								{#if isCepValid}
+									<span class="badge badge-success font-bold text-[11px] gap-1 py-1 px-2 text-success-content">
+										<CheckCircle class="w-3.5 h-3.5" />
+										{city} - {stateUf}
+									</span>
+								{:else if cepError}
+									<span class="badge badge-error font-bold text-[11px] gap-1 py-1 px-2 text-error-content">
+										<XCircle class="w-3.5 h-3.5" />
+										{cepError}
+									</span>
+								{/if}
 							</div>
 
-							<div>
-								<label for="input-state" class="text-xs font-bold uppercase opacity-75 mb-1.5 block">
-									UF *
-								</label>
+							<div class="relative">
 								<input
-									id="input-state"
-									type="text"
-									bind:value={stateUf}
-									maxlength="2"
-									class="input input-bordered w-full text-base font-semibold h-13 text-center uppercase bg-base-100"
-									required
+									id="input-cep"
+									type="tel"
+									inputmode="numeric"
+									placeholder="00000-000"
+									value={cep}
+									oninput={handleCepInput}
+									class="input input-bordered w-full text-lg font-mono font-bold h-14 pl-11 bg-base-100 {isCepValid ? 'border-success' : cepError ? 'border-error' : ''}"
+									autofocus
 								/>
+								<MapPin class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-primary opacity-80" />
+								{#if isLoadingCep}
+									<span class="loading loading-spinner loading-sm absolute right-4 top-1/2 -translate-y-1/2 text-primary"></span>
+								{/if}
 							</div>
+
+							{#if city && stateUf}
+								<div class="mt-2 p-3 bg-base-200 rounded-xl border border-base-300 flex items-center justify-between text-xs">
+									<div class="flex items-center gap-2">
+										<MapPin class="w-4 h-4 text-primary shrink-0" />
+										<span><strong>{city} - {stateUf}</strong> {neighborhood ? `• ${neighborhood}` : ''}</span>
+									</div>
+									<span class="badge badge-neutral badge-xs font-mono">Brasil</span>
+								</div>
+							{/if}
 						</div>
 
 						<!-- Slider de Raio de Atendimento -->
@@ -689,7 +749,11 @@
 							/>
 
 							<p class="text-[11px] opacity-60">
-								Você receberá notificações de clientes localizados em até {serviceRadiusKm} km a partir do centro de {city}.
+								{#if city && stateUf}
+									Você receberá notificações de clientes em até {serviceRadiusKm} km a partir de <strong>{city} - {stateUf}</strong>.
+								{:else}
+									Você receberá notificações de clientes em até {serviceRadiusKm} km a partir do seu CEP base.
+								{/if}
 							</p>
 						</div>
 
@@ -707,7 +771,7 @@
 
 					<button
 						onclick={handleSubmit}
-						disabled={isSubmitting || !city.trim() || !stateUf.trim() || !isDocValid}
+						disabled={isSubmitting || !isCepValid || !isDocValid}
 						class="btn btn-primary btn-lg btn-block font-black text-base h-14 mt-4 shadow-md gap-2"
 					>
 						{#if isSubmitting}

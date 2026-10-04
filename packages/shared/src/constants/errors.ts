@@ -20,5 +20,7 @@ export const APP_ERRORS = {
   INVALID_EMAIL: "Informe um endereço de e-mail válido.",
   INVALID_SERVICES_SELECTION: "Selecione pelo menos um serviço ativo que você realiza.",
   INVALID_LOCATION: "Informe sua cidade e estado de atendimento.",
+  INVALID_CEP: "Informe um CEP válido com 8 dígitos.",
 } as const;
+
 
