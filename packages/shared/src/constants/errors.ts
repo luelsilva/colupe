@@ -12,4 +12,13 @@ export const APP_ERRORS = {
   PROFESSIONAL_NOT_VERIFIED: "Seu cadastro de profissional ainda está em análise pela moderação.",
   PROFESSIONAL_SUSPENDED: "Seu perfil profissional está temporariamente suspenso.",
   DATABASE_CONNECTION_ERROR: "Erro de comunicação com a base de dados.",
+  INVALID_CPF: "O CPF informado é inválido. Verifique os números digitados.",
+  INVALID_CNPJ: "O CNPJ informado é inválido. Verifique os números digitados.",
+  INVALID_DOCUMENT: "O documento informado é inválido.",
+  INVALID_PHONE: "Informe um número de WhatsApp válido com DDD.",
+  INVALID_FULL_NAME: "Por favor, informe seu nome e sobrenome completos.",
+  INVALID_EMAIL: "Informe um endereço de e-mail válido.",
+  INVALID_SERVICES_SELECTION: "Selecione pelo menos um serviço ativo que você realiza.",
+  INVALID_LOCATION: "Informe sua cidade e estado de atendimento.",
 } as const;
+

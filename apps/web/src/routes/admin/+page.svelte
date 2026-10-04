@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { CategoryIcon } from '@colupe/ui';
+	import { CategoryIcon, alert } from '@colupe/ui';
 	import {
 		ShieldAlert,
 		Layers,
@@ -11,15 +11,17 @@
 		ToggleLeft,
 		ToggleRight,
 		Search,
-		Coins
+		Coins,
+		CheckCircle2,
+		XCircle
 	} from 'lucide-svelte';
 
 	const API = 'http://localhost:3333';
 
 	// ── Estado ─────────────────────────────────────────────────────────────────
-	type Category    = { id: string; name: string; slug: string; icon: string | null; description: string | null; isActive: boolean; orderIndex: number };
-	type Subcategory = { id: string; categoryId: string; name: string; slug: string; isActive: boolean; orderIndex: number; categoryName: string | null };
-	type Service     = { id: string; subcategoryId: string; name: string; slug: string; href: string | null; leadCostCredits: number; isActive: boolean; subcategoryName: string | null; categoryName: string | null };
+	type Category    = { id: number | string; name: string; slug: string; icon: string | null; description: string | null; isActive: boolean; orderIndex: number };
+	type Subcategory = { id: number | string; categoryId: number | string; name: string; slug: string; isActive: boolean; orderIndex: number; categoryName: string | null };
+	type Service     = { id: number | string; subcategoryId: number | string; name: string; slug: string; href: string | null; leadCostCredits: number; isActive: boolean; subcategoryName: string | null; categoryName: string | null };
 
 	let categories    = $state<Category[]>([]);
 	let subcategories = $state<Subcategory[]>([]);
@@ -27,14 +29,15 @@
 
 	let loading    = $state({ categories: true, subcategories: true, services: true });
 	let error      = $state({ categories: '', subcategories: '', services: '' });
+	let togglingId = $state<string | number | null>(null);
 
 	let searchCat  = $state('');
 	let searchSub  = $state('');
 	let searchSvc  = $state('');
 
 	// Filtros por seleção
-	let selectedCategoryId    = $state<string | null>(null);
-	let selectedSubcategoryId = $state<string | null>(null);
+	let selectedCategoryId    = $state<number | string | null>(null);
+	let selectedSubcategoryId = $state<number | string | null>(null);
 
 	// ── Derivados ───────────────────────────────────────────────────────────────
 	let filteredCategories = $derived(
@@ -43,14 +46,14 @@
 
 	let filteredSubcategories = $derived(
 		subcategories
-			.filter(s => !selectedCategoryId || s.categoryId === selectedCategoryId)
+			.filter(s => selectedCategoryId === null || String(s.categoryId) === String(selectedCategoryId))
 			.filter(s => s.name.toLowerCase().includes(searchSub.toLowerCase()))
 	);
 
 	let filteredServices = $derived(
 		services
-			.filter(s => !selectedSubcategoryId || s.subcategoryId === selectedSubcategoryId)
-			.filter(s => !selectedCategoryId || subcategories.find(sub => sub.id === s.subcategoryId)?.categoryId === selectedCategoryId)
+			.filter(s => selectedSubcategoryId === null || String(s.subcategoryId) === String(selectedSubcategoryId))
+			.filter(s => selectedCategoryId === null || subcategories.find(sub => String(sub.id) === String(s.subcategoryId))?.categoryId?.toString() === String(selectedCategoryId))
 			.filter(s => s.name.toLowerCase().includes(searchSvc.toLowerCase()))
 	);
 
@@ -80,13 +83,77 @@
 		]);
 	}
 
-	function selectCategory(id: string) {
-		selectedCategoryId    = selectedCategoryId === id ? null : id;
+	function selectCategory(id: number | string) {
+		selectedCategoryId    = String(selectedCategoryId) === String(id) ? null : id;
 		selectedSubcategoryId = null;
 	}
 
-	function selectSubcategory(id: string) {
-		selectedSubcategoryId = selectedSubcategoryId === id ? null : id;
+	function selectSubcategory(id: number | string) {
+		selectedSubcategoryId = String(selectedSubcategoryId) === String(id) ? null : id;
+	}
+
+	// ── Ações de Ativar / Desativar ────────────────────────────────────────────
+	async function toggleCategory(id: number | string, e: MouseEvent) {
+		e.stopPropagation();
+		const cat = categories.find(c => String(c.id) === String(id));
+		if (!cat || togglingId) return;
+
+		const prevStatus = cat.isActive;
+		cat.isActive = !prevStatus;
+		togglingId = `cat-${id}`;
+
+		try {
+			const res = await fetch(`${API}/catalog/categories/${id}/toggle`, { method: 'PATCH' });
+			if (!res.ok) throw new Error();
+			alert.success(`Categoria "${cat.name}" ${cat.isActive ? 'ativada' : 'desativada'} com sucesso.`);
+		} catch {
+			cat.isActive = prevStatus;
+			alert.error('Erro ao atualizar status da categoria.');
+		} finally {
+			togglingId = null;
+		}
+	}
+
+	async function toggleSubcategory(id: number | string, e: MouseEvent) {
+		e.stopPropagation();
+		const sub = subcategories.find(s => String(s.id) === String(id));
+		if (!sub || togglingId) return;
+
+		const prevStatus = sub.isActive;
+		sub.isActive = !prevStatus;
+		togglingId = `sub-${id}`;
+
+		try {
+			const res = await fetch(`${API}/catalog/subcategories/${id}/toggle`, { method: 'PATCH' });
+			if (!res.ok) throw new Error();
+			alert.success(`Subcategoria "${sub.name}" ${sub.isActive ? 'ativada' : 'desativada'} com sucesso.`);
+		} catch {
+			sub.isActive = prevStatus;
+			alert.error('Erro ao atualizar status da subcategoria.');
+		} finally {
+			togglingId = null;
+		}
+	}
+
+	async function toggleService(id: number | string, e: MouseEvent) {
+		e.stopPropagation();
+		const svc = services.find(s => String(s.id) === String(id));
+		if (!svc || togglingId) return;
+
+		const prevStatus = svc.isActive;
+		svc.isActive = !prevStatus;
+		togglingId = `svc-${id}`;
+
+		try {
+			const res = await fetch(`${API}/catalog/services/${id}/toggle`, { method: 'PATCH' });
+			if (!res.ok) throw new Error();
+			alert.success(`Serviço "${svc.name}" ${svc.isActive ? 'ativado' : 'desativado'} com sucesso.`);
+		} catch {
+			svc.isActive = prevStatus;
+			alert.error('Erro ao atualizar status do serviço.');
+		} finally {
+			togglingId = null;
+		}
 	}
 
 	onMount(fetchAll);
@@ -102,7 +169,7 @@
 				</div>
 				<div>
 					<h1 class="text-xl font-black leading-tight">Catálogo de Serviços</h1>
-					<p class="text-xs opacity-60">Categorias · Subcategorias · Serviços</p>
+					<p class="text-xs opacity-60">Gerenciamento, Ativação e Desativação em Tempo Real</p>
 				</div>
 			</div>
 			<button
@@ -117,15 +184,27 @@
 	<!-- ── Counters ──────────────────────────────────────────────────────────── -->
 	<div class="max-w-[1600px] mx-auto px-6 pt-5 pb-0 grid grid-cols-3 gap-4">
 		{#each [
-			{ label: 'Categorias',    count: categories.length,    icon: FolderTree, color: 'text-primary'   },
-			{ label: 'Subcategorias', count: subcategories.length, icon: Layers,     color: 'text-secondary' },
-			{ label: 'Serviços',      count: services.length,      icon: Wrench,     color: 'text-accent'    },
+			{ label: 'Categorias',    count: categories.length,    active: categories.filter(c => c.isActive).length,    icon: FolderTree, color: 'text-primary'   },
+			{ label: 'Subcategorias', count: subcategories.length, active: subcategories.filter(s => s.isActive).length, icon: Layers,     color: 'text-secondary' },
+			{ label: 'Serviços',      count: services.length,      active: services.filter(s => s.isActive).length,      icon: Wrench,     color: 'text-accent'    },
 		] as stat}
-			<div class="bg-base-100 border-2 border-base-300 rounded-xl px-5 py-3 flex items-center gap-3">
-				<stat.icon class="w-6 h-6 {stat.color} shrink-0" />
-				<div>
-					<p class="text-2xl font-black leading-none">{stat.count}</p>
-					<p class="text-xs opacity-60 font-semibold">{stat.label}</p>
+			<div class="bg-base-100 border-2 border-base-300 rounded-xl px-5 py-3 flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3">
+					<stat.icon class="w-6 h-6 {stat.color} shrink-0" />
+					<div>
+						<p class="text-2xl font-black leading-none">{stat.count}</p>
+						<p class="text-xs opacity-60 font-semibold">{stat.label}</p>
+					</div>
+				</div>
+				<div class="text-right text-xs">
+					<span class="badge badge-success badge-sm font-bold gap-1">
+						<CheckCircle2 class="w-3 h-3" /> {stat.active} ativos
+					</span>
+					{#if stat.count - stat.active > 0}
+						<span class="badge badge-ghost badge-sm opacity-60 ml-1 font-bold">
+							{stat.count - stat.active} inativos
+						</span>
+					{/if}
 				</div>
 			</div>
 		{/each}
@@ -150,7 +229,7 @@
 				</div>
 				<label class="input input-sm input-bordered flex items-center gap-2 w-full">
 					<Search class="w-3.5 h-3.5 opacity-50 shrink-0" />
-					<input type="text" placeholder="Buscar..." bind:value={searchCat} class="grow text-xs" />
+					<input type="text" placeholder="Buscar categoria..." bind:value={searchCat} class="grow text-xs" />
 				</label>
 			</div>
 
@@ -168,27 +247,44 @@
 				{:else}
 					{#each filteredCategories as cat}
 						{@const isSelected = selectedCategoryId === cat.id}
-						<button
+						<div
+							role="button"
+							tabindex="0"
 							onclick={() => selectCategory(cat.id)}
-							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3
-								{isSelected ? 'bg-primary/10 border-l-2 border-l-primary' : ''}"
+							onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectCategory(cat.id); }}
+							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3 cursor-pointer
+								{isSelected ? 'bg-primary/10 border-l-2 border-l-primary' : ''} {!cat.isActive ? 'opacity-50 bg-base-200/50' : ''}"
 						>
 							<div class="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center text-primary shrink-0">
 								<CategoryIcon name={cat.icon} class="w-4 h-4" />
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="font-bold text-sm truncate">{cat.name}</p>
+								<div class="flex items-center gap-1.5">
+									<p class="font-bold text-sm truncate {cat.isActive ? '' : 'line-through text-base-content/60'}">{cat.name}</p>
+									{#if !cat.isActive}
+										<span class="badge badge-ghost badge-xs text-[10px] uppercase font-bold">Inativa</span>
+									{/if}
+								</div>
 								<p class="text-xs opacity-50 truncate">{cat.slug}</p>
 							</div>
-							<div class="flex items-center gap-1.5 shrink-0">
-								{#if cat.isActive}
-									<ToggleRight class="w-4 h-4 text-success" />
-								{:else}
-									<ToggleLeft class="w-4 h-4 opacity-30" />
-								{/if}
+							<div class="flex items-center gap-2 shrink-0">
+								<!-- Botão Interativo Ativar/Desativar -->
+								<button
+									type="button"
+									onclick={(e) => toggleCategory(cat.id, e)}
+									disabled={togglingId === `cat-${cat.id}`}
+									class="btn btn-ghost btn-xs btn-circle hover:bg-base-300"
+									title={cat.isActive ? 'Clique para desativar' : 'Clique para ativar'}
+								>
+									{#if cat.isActive}
+										<ToggleRight class="w-5 h-5 text-success" />
+									{:else}
+										<ToggleLeft class="w-5 h-5 opacity-40 hover:opacity-80" />
+									{/if}
+								</button>
 								<ChevronRight class="w-3.5 h-3.5 opacity-30 {isSelected ? 'text-primary opacity-100' : ''}" />
 							</div>
-						</button>
+						</div>
 					{/each}
 				{/if}
 			</div>
@@ -208,7 +304,7 @@
 				</div>
 				<label class="input input-sm input-bordered flex items-center gap-2 w-full">
 					<Search class="w-3.5 h-3.5 opacity-50 shrink-0" />
-					<input type="text" placeholder="Buscar..." bind:value={searchSub} class="grow text-xs" />
+					<input type="text" placeholder="Buscar subcategoria..." bind:value={searchSub} class="grow text-xs" />
 				</label>
 			</div>
 
@@ -227,24 +323,41 @@
 				{:else}
 					{#each filteredSubcategories as sub}
 						{@const isSelected = selectedSubcategoryId === sub.id}
-						<button
+						<div
+							role="button"
+							tabindex="0"
 							onclick={() => selectSubcategory(sub.id)}
-							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3
-								{isSelected ? 'bg-secondary/10 border-l-2 border-l-secondary' : ''}"
+							onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectSubcategory(sub.id); }}
+							class="w-full text-left px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-200 transition-colors flex items-center gap-3 cursor-pointer
+								{isSelected ? 'bg-secondary/10 border-l-2 border-l-secondary' : ''} {!sub.isActive ? 'opacity-50 bg-base-200/50' : ''}"
 						>
 							<div class="flex-1 min-w-0">
-								<p class="font-bold text-sm truncate">{sub.name}</p>
+								<div class="flex items-center gap-1.5">
+									<p class="font-bold text-sm truncate {sub.isActive ? '' : 'line-through text-base-content/60'}">{sub.name}</p>
+									{#if !sub.isActive}
+										<span class="badge badge-ghost badge-xs text-[10px] uppercase font-bold">Inativa</span>
+									{/if}
+								</div>
 								<p class="text-xs opacity-40 truncate">{sub.categoryName ?? '—'}</p>
 							</div>
-							<div class="flex items-center gap-1.5 shrink-0">
-								{#if sub.isActive}
-									<ToggleRight class="w-4 h-4 text-success" />
-								{:else}
-									<ToggleLeft class="w-4 h-4 opacity-30" />
-								{/if}
+							<div class="flex items-center gap-2 shrink-0">
+								<!-- Botão Interativo Ativar/Desativar -->
+								<button
+									type="button"
+									onclick={(e) => toggleSubcategory(sub.id, e)}
+									disabled={togglingId === `sub-${sub.id}`}
+									class="btn btn-ghost btn-xs btn-circle hover:bg-base-300"
+									title={sub.isActive ? 'Clique para desativar' : 'Clique para ativar'}
+								>
+									{#if sub.isActive}
+										<ToggleRight class="w-5 h-5 text-success" />
+									{:else}
+										<ToggleLeft class="w-5 h-5 opacity-40 hover:opacity-80" />
+									{/if}
+								</button>
 								<ChevronRight class="w-3.5 h-3.5 opacity-30 {isSelected ? 'text-secondary opacity-100' : ''}" />
 							</div>
-						</button>
+						</div>
 					{/each}
 				{/if}
 			</div>
@@ -264,7 +377,7 @@
 				</div>
 				<label class="input input-sm input-bordered flex items-center gap-2 w-full">
 					<Search class="w-3.5 h-3.5 opacity-50 shrink-0" />
-					<input type="text" placeholder="Buscar..." bind:value={searchSvc} class="grow text-xs" />
+					<input type="text" placeholder="Buscar serviço..." bind:value={searchSvc} class="grow text-xs" />
 				</label>
 			</div>
 
@@ -282,9 +395,14 @@
 					</p>
 				{:else}
 					{#each filteredServices as svc}
-						<div class="px-4 py-3 border-b border-base-200 last:border-0 flex items-start gap-3 hover:bg-base-200 transition-colors">
+						<div class="px-4 py-3 border-b border-base-200 last:border-0 flex items-start gap-3 hover:bg-base-200 transition-colors {!svc.isActive ? 'opacity-50 bg-base-200/50' : ''}">
 							<div class="flex-1 min-w-0">
-								<p class="font-bold text-sm truncate">{svc.name}</p>
+								<div class="flex items-center gap-1.5">
+									<p class="font-bold text-sm truncate {svc.isActive ? '' : 'line-through text-base-content/60'}">{svc.name}</p>
+									{#if !svc.isActive}
+										<span class="badge badge-ghost badge-xs text-[10px] uppercase font-bold">Inativo</span>
+									{/if}
+								</div>
 								<p class="text-xs opacity-40 truncate">
 									{svc.categoryName ?? '—'} › {svc.subcategoryName ?? '—'}
 								</p>
@@ -292,16 +410,26 @@
 									<p class="text-xs opacity-30 truncate font-mono mt-0.5">{svc.href}</p>
 								{/if}
 							</div>
-							<div class="flex flex-col items-end gap-1 shrink-0">
-								<div class="flex items-center gap-1 badge badge-sm badge-ghost font-bold">
+							<div class="flex items-center gap-2 shrink-0">
+								<div class="flex items-center gap-1 badge badge-sm badge-ghost font-bold" title="Custo em Colupas">
 									<Coins class="w-3 h-3 text-warning" />
 									{svc.leadCostCredits}
 								</div>
-								{#if svc.isActive}
-									<ToggleRight class="w-4 h-4 text-success" />
-								{:else}
-									<ToggleLeft class="w-4 h-4 opacity-30" />
-								{/if}
+
+								<!-- Botão Interativo Ativar/Desativar Serviço -->
+								<button
+									type="button"
+									onclick={(e) => toggleService(svc.id, e)}
+									disabled={togglingId === `svc-${svc.id}`}
+									class="btn btn-ghost btn-xs btn-circle hover:bg-base-300"
+									title={svc.isActive ? 'Clique para desativar serviço' : 'Clique para ativar serviço'}
+								>
+									{#if svc.isActive}
+										<ToggleRight class="w-5 h-5 text-success" />
+									{:else}
+										<ToggleLeft class="w-5 h-5 opacity-40 hover:opacity-80" />
+									{/if}
+								</button>
 							</div>
 						</div>
 					{/each}
