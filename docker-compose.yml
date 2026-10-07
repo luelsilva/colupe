@@ -64,3 +64,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+
+  # ── CLOUDFLARE TUNNEL ───────────────────────────────────────────────────────
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: colupe-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-eyJhIjoiNTliMTdmMTYxYTlkMmIzYmQ4MmM0NGVjOWE5MGZlYjQiLCJ0IjoiYTlmNjgzZGYtMGQ2Yi00Zjc4LTg3OTMtZWQ5YmU4NjBiZTVhIiwicyI6Ik5UaGlZemN3WlRNdFptTTFZaTAwWm1Rd0xXRXdabU10TXpVMU1HUmtaV0V6TkRJNSJ9}
