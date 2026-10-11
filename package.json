@@ -10,7 +10,6 @@
     "dev": "bun --filter \"*\" dev",
     "dev:api": "bun --filter @colupe/api dev",
     "dev:web": "bun --filter @colupe/web dev",
-    "dev:site": "bun --filter @colupe/site dev",
     "build": "bun --filter \"*\" build"
   }
 }

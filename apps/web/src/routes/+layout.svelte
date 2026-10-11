@@ -10,7 +10,9 @@
 		Sun,
 		Moon,
 		PlusCircle,
-		User
+		User,
+		Coins,
+		Info
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -45,13 +47,21 @@
 					<PlusCircle class="w-4 h-4" />
 					Pedir Orçamento
 				</a>
+				<a href="/precos" class="hover:text-primary transition-colors flex items-center gap-1.5">
+					<Coins class="w-4 h-4" />
+					Preços & Colupas
+				</a>
+				<a href="/sobre" class="hover:text-primary transition-colors flex items-center gap-1.5">
+					<Info class="w-4 h-4" />
+					Sobre
+				</a>
 				<a href="/profissional" class="hover:text-primary transition-colors flex items-center gap-1.5">
 					<Briefcase class="w-4 h-4" />
 					Área do Profissional
 				</a>
 				<a href="/admin" class="hover:text-primary transition-colors flex items-center gap-1.5 text-secondary">
 					<ShieldAlert class="w-4 h-4" />
-					Painel Admin
+					Admin
 				</a>
 			</nav>
 
@@ -112,16 +122,16 @@
 				<ul class="space-y-2 text-sm opacity-80">
 					<li><a href="/profissional/cadastro" class="hover:underline">Cadastre seu Negócio</a></li>
 					<li><a href="/profissional" class="hover:underline">Feed de Oportunidades</a></li>
-					<li><a href="/profissional/creditos" class="hover:underline">Pacotes de Colupas</a></li>
+					<li><a href="/precos" class="hover:underline">Planos e Preços de Colupas</a></li>
 				</ul>
 			</div>
 
 			<div>
-				<h4 class="font-bold text-sm uppercase tracking-wider mb-3">Administração</h4>
+				<h4 class="font-bold text-sm uppercase tracking-wider mb-3">Institucional</h4>
 				<ul class="space-y-2 text-sm opacity-80">
-					<li><a href="/admin" class="hover:underline">Moderação de Prestadores</a></li>
-					<li><a href="/admin/categorias" class="hover:underline">Catálogo de Serviços</a></li>
-					<li><a href="/admin/metricas" class="hover:underline">Métricas do Sistema</a></li>
+					<li><a href="/sobre" class="hover:underline">Sobre o Colupe</a></li>
+					<li><a href="/precos" class="hover:underline">Tabela de Preços</a></li>
+					<li><a href="/admin" class="hover:underline">Painel Administrativo</a></li>
 				</ul>
 			</div>
 		</div>
