@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -21,7 +22,7 @@ export const professionalStatusEnum = pgEnum("professional_status", [
 ]);
 
 export const profiles = pgTable("profiles", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   fullName: text("full_name").notNull(),
@@ -74,7 +75,7 @@ export const professionalServices = pgTable(
 );
 
 export const professionalPortfolio = pgTable("professional_portfolio", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   professionalId: bigint("professional_id", { mode: "number" })
     .notNull()
     .references(() => professionalProfiles.id, { onDelete: "cascade" }),

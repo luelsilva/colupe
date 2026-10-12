@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { CategoryIcon, alert } from '@colupe/ui';
+	import { APP_ERRORS } from '@colupe/shared';
+	import { API_URL } from '$lib/config/api';
 	import {
 		ShieldAlert,
 		Layers,
@@ -15,8 +17,6 @@
 		CheckCircle2,
 		XCircle
 	} from 'lucide-svelte';
-
-	const API = 'http://localhost:3333';
 
 	// ── Estado ─────────────────────────────────────────────────────────────────
 	type Category    = { id: number | string; name: string; slug: string; icon: string | null; description: string | null; isActive: boolean; orderIndex: number };
@@ -63,22 +63,22 @@
 		error   = { categories: '', subcategories: '', services: '' };
 
 		await Promise.all([
-			fetch(`${API}/catalog/categories`)
+			fetch(`${API_URL}/catalog/categories`)
 				.then(r => r.json())
 				.then(j => { categories = j.data ?? []; })
-				.catch(() => { error.categories = 'Erro ao carregar categorias'; })
+				.catch(() => { error.categories = APP_ERRORS.CATEGORY_FETCH_ERROR; })
 				.finally(() => { loading.categories = false; }),
 
-			fetch(`${API}/catalog/subcategories`)
+			fetch(`${API_URL}/catalog/subcategories`)
 				.then(r => r.json())
 				.then(j => { subcategories = j.data ?? []; })
-				.catch(() => { error.subcategories = 'Erro ao carregar subcategorias'; })
+				.catch(() => { error.subcategories = APP_ERRORS.SUBCATEGORY_FETCH_ERROR; })
 				.finally(() => { loading.subcategories = false; }),
 
-			fetch(`${API}/catalog/services`)
+			fetch(`${API_URL}/catalog/services`)
 				.then(r => r.json())
 				.then(j => { services = j.data ?? []; })
-				.catch(() => { error.services = 'Erro ao carregar serviços'; })
+				.catch(() => { error.services = APP_ERRORS.SERVICE_FETCH_ERROR; })
 				.finally(() => { loading.services = false; }),
 		]);
 	}
@@ -103,12 +103,12 @@
 		togglingId = `cat-${id}`;
 
 		try {
-			const res = await fetch(`${API}/catalog/categories/${id}/toggle`, { method: 'PATCH' });
+			const res = await fetch(`${API_URL}/catalog/categories/${id}/toggle`, { method: 'PATCH' });
 			if (!res.ok) throw new Error();
 			alert.success(`Categoria "${cat.name}" ${cat.isActive ? 'ativada' : 'desativada'} com sucesso.`);
 		} catch {
 			cat.isActive = prevStatus;
-			alert.error('Erro ao atualizar status da categoria.');
+			alert.error(APP_ERRORS.CATEGORY_STATUS_UPDATE_ERROR);
 		} finally {
 			togglingId = null;
 		}
@@ -124,12 +124,12 @@
 		togglingId = `sub-${id}`;
 
 		try {
-			const res = await fetch(`${API}/catalog/subcategories/${id}/toggle`, { method: 'PATCH' });
+			const res = await fetch(`${API_URL}/catalog/subcategories/${id}/toggle`, { method: 'PATCH' });
 			if (!res.ok) throw new Error();
 			alert.success(`Subcategoria "${sub.name}" ${sub.isActive ? 'ativada' : 'desativada'} com sucesso.`);
 		} catch {
 			sub.isActive = prevStatus;
-			alert.error('Erro ao atualizar status da subcategoria.');
+			alert.error(APP_ERRORS.SUBCATEGORY_STATUS_UPDATE_ERROR);
 		} finally {
 			togglingId = null;
 		}
@@ -145,12 +145,12 @@
 		togglingId = `svc-${id}`;
 
 		try {
-			const res = await fetch(`${API}/catalog/services/${id}/toggle`, { method: 'PATCH' });
+			const res = await fetch(`${API_URL}/catalog/services/${id}/toggle`, { method: 'PATCH' });
 			if (!res.ok) throw new Error();
 			alert.success(`Serviço "${svc.name}" ${svc.isActive ? 'ativado' : 'desativado'} com sucesso.`);
 		} catch {
 			svc.isActive = prevStatus;
-			alert.error('Erro ao atualizar status do serviço.');
+			alert.error(APP_ERRORS.SERVICE_STATUS_UPDATE_ERROR);
 		} finally {
 			togglingId = null;
 		}

@@ -1,4 +1,4 @@
-import { db, categories, subcategories, services } from "@colupe/database";
+import { db, categories, subcategories, services, creditPackages } from "@colupe/database";
 import { asc, eq } from "drizzle-orm";
 
 export class CatalogService {
@@ -116,5 +116,13 @@ export class CatalogService {
       .returning();
 
     return updated;
+  }
+
+  static async getPackages() {
+    return db
+      .select()
+      .from(creditPackages)
+      .where(eq(creditPackages.isActive, true))
+      .orderBy(asc(creditPackages.orderIndex));
   }
 }

@@ -10,7 +10,7 @@ services:
     ports:
       - "3333:3333"
     env_file:
-      - ./apps/api/.env
+      - ./.env
     environment:
       NODE_ENV: production
       PORT: 3333
@@ -30,11 +30,12 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - ./.env
     environment:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
-      PUBLIC_API_URL: http://colupe-api:3333
     depends_on:
       colupe-api:
         condition: service_healthy
@@ -52,4 +53,4 @@ services:
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-eyJhIjoiNTliMTdmMTYxYTlkMmIzYmQ4MmM0NGVjOWE5MGZlYjQiLCJ0IjoiYTlmNjgzZGYtMGQ2Yi00Zjc4LTg3OTMtZWQ5YmU4NjBiZTVhIiwicyI6Ik5UaGlZemN3WlRNdFptTTFZaTAwWm1Rd0xXRXdabU10TXpVMU1HUmtaV0V6TkRJNSJ9}
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}

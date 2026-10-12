@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -53,7 +54,7 @@ export const keepAlive = pgTable("keep_alive", {
  * Categorias e Catálogo de Serviços
  */
 export const categories = pgTable("categories", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),
@@ -66,7 +67,7 @@ export const categories = pgTable("categories", {
 });
 
 export const subcategories = pgTable("subcategories", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   categoryId: bigint("category_id", { mode: "number" })
     .notNull()
     .references(() => categories.id, { onDelete: "cascade" }),
@@ -81,7 +82,7 @@ export const subcategories = pgTable("subcategories", {
 });
 
 export const services = pgTable("services", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   subcategoryId: bigint("subcategory_id", { mode: "number" })
     .notNull()
     .references(() => subcategories.id, { onDelete: "cascade" }),
@@ -102,7 +103,7 @@ export const services = pgTable("services", {
  * Solicitações de Serviços (Pedidos / Leads)
  */
 export const serviceRequests = pgTable("service_requests", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   clientId: bigint("client_id", { mode: "number" })
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
@@ -128,7 +129,7 @@ export const serviceRequests = pgTable("service_requests", {
 });
 
 export const leadUnlocks = pgTable("lead_unlocks", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   requestId: bigint("request_id", { mode: "number" })
     .notNull()
     .references(() => serviceRequests.id, { onDelete: "cascade" }),
@@ -147,7 +148,7 @@ export const leadUnlocks = pgTable("lead_unlocks", {
  * Avaliações (Reviews)
  */
 export const reviews = pgTable("reviews", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   requestId: bigint("request_id", { mode: "number" })
     .notNull()
     .references(() => serviceRequests.id, { onDelete: "cascade" }),
@@ -169,7 +170,7 @@ export const reviews = pgTable("reviews", {
  * Colupas (Créditos da Plataforma) e Transações
  */
 export const creditPackages = pgTable("credit_packages", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   name: text("name").notNull(),
   creditsAmount: integer("credits_amount").notNull(),
   bonusCredits: integer("bonus_credits").notNull().default(0),
@@ -180,7 +181,7 @@ export const creditPackages = pgTable("credit_packages", {
 });
 
 export const creditTransactions = pgTable("credit_transactions", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey().default(sql`snowflake_id()`),
   professionalId: bigint("professional_id", { mode: "number" })
     .notNull()
     .references(() => professionalProfiles.id, { onDelete: "cascade" }),

@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { alert } from '$lib/components/dialogs/alerts.svelte';
 	import { confirm } from '$lib/components/dialogs/confirm.svelte';
+	import { APP_ERRORS } from '@colupe/shared';
+	import { API_URL } from '$lib/config/api';
 	import {
 		Coins,
 		MapPin,
@@ -14,82 +17,70 @@
 		UserCheck
 	} from 'lucide-svelte';
 
+	interface LeadItem {
+		id: number | string;
+		title: string;
+		service: string;
+		costCredits: number;
+		city: string;
+		neighborhood: string;
+		state: string;
+		urgency: string;
+		description: string;
+		createdAt: string;
+		unlocksCount: number;
+		maxUnlocks: number;
+		unlocked: boolean;
+		client: {
+			name: string;
+			phone: string;
+			address: string;
+		};
+	}
+
 	let credits = $state(45);
 	let activeTab = $state<'feed' | 'unlocked'>('feed');
+	let leads = $state<LeadItem[]>([]);
+	let isLoading = $state(true);
 
-	// Leads de exemplo disponíveis no feed
-	let leads = $state([
-		{
-			id: '9001',
-			title: 'Troca de Fiação do Chuveiro e Disjuntor',
-			category: 'Reformas e Reparos',
-			service: 'Eletricista',
-			costCredits: 15,
-			city: 'Criciúma',
-			neighborhood: 'Centro',
-			state: 'SC',
-			urgency: 'immediate',
-			description: 'O chuveiro está desarmando o disjuntor constantemente. Preciso de avaliação da fiação antiga e substituição por disjuntor adequado.',
-			createdAt: 'Há 25 minutos',
-			unlocksCount: 1,
-			maxUnlocks: 4,
-			unlocked: false,
-			client: {
-				name: 'Mariana Silva',
-				phone: '(48) 99876-5432',
-				address: 'Rua Coronel Pedro Benedet, 340 - Apto 502'
+	onMount(async () => {
+		try {
+			const res = await fetch(`${API_URL}/requests`);
+			if (res.ok) {
+				const json = await res.json();
+				const items = json.data ?? [];
+				leads = items.map((r: any) => ({
+					id: r.id,
+					title: r.title,
+					service: r.serviceName || 'Serviço Geral',
+					costCredits: r.leadCostCredits || 15,
+					city: r.city || '',
+					neighborhood: r.neighborhood || '',
+					state: r.state || '',
+					urgency: r.urgency || 'medium',
+					description: r.description || '',
+					createdAt: r.createdAt ? new Date(r.createdAt).toLocaleDateString('pt-BR') : 'Hoje',
+					unlocksCount: r.unlocksCount || 0,
+					maxUnlocks: r.maxUnlocks || 4,
+					unlocked: false,
+					client: {
+						name: 'Cliente Colupe',
+						phone: '(48) 99999-0000',
+						address: r.addressFull || `${r.neighborhood}, ${r.city} - ${r.state}`
+					}
+				}));
 			}
-		},
-		{
-			id: '9002',
-			title: 'Instalação de 3 Pontos de Iluminação LED',
-			category: 'Reformas e Reparos',
-			service: 'Eletricista',
-			costCredits: 15,
-			city: 'Içara',
-			neighborhood: 'Jardim Elizabete',
-			state: 'SC',
-			urgency: 'this_week',
-			description: 'Instalação de spots de LED no teto de gesso da sala de estar e sala de jantar.',
-			createdAt: 'Há 1 hora',
-			unlocksCount: 2,
-			maxUnlocks: 4,
-			unlocked: false,
-			client: {
-				name: 'Roberto Souza',
-				phone: '(48) 98765-4321',
-				address: 'Rua Vitória, 120'
-			}
-		},
-		{
-			id: '9003',
-			title: 'Pintura Completa de Apartamento 70m²',
-			category: 'Reformas e Reparos',
-			service: 'Pintor Residencial',
-			costCredits: 12,
-			city: 'Criciúma',
-			neighborhood: 'Pio Corrêa',
-			state: 'SC',
-			urgency: 'flexible',
-			description: 'Pintura de paredes internas e teto com massa corrida em pontos específicos. Tinta já comprada.',
-			createdAt: 'Há 3 horas',
-			unlocksCount: 3,
-			maxUnlocks: 4,
-			unlocked: false,
-			client: {
-				name: 'Fernanda Lima',
-				phone: '(48) 99123-4567',
-				address: 'Av. Santos Dumont, 890'
-			}
+		} finally {
+			isLoading = false;
 		}
-	]);
+	});
 
 	let unlockedLeads = $derived(leads.filter(l => l.unlocked));
 	let feedLeads = $derived(leads.filter(l => !l.unlocked));
 
-	async function unlockLead(lead: typeof leads[0]) {
+	async function unlockLead(lead: LeadItem) {
 		if (credits < lead.costCredits) {
-			alert.error('Saldo insuficiente! Recarregue suas Colupas para desbloquear este contato.');
+			alert.error(APP_ERRORS.INSUFFICIENT_CREDITS);
 			return;
 		}
 

@@ -1,77 +1,50 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import {
 		Search,
-		Hammer,
-		Wrench,
-		Home,
-		BookOpen,
-		Laptop,
-		PartyPopper,
 		CheckCircle,
 		ShieldCheck,
 		Zap,
 		Star,
 		ArrowRight
 	} from 'lucide-svelte';
+	import { CategoryIcon } from '@colupe/ui';
+	import { API_URL } from '$lib/config/api';
+
+	interface CategoryItem {
+		id: number;
+		slug: string;
+		name: string;
+		description: string | null;
+		icon: string | null;
+		isActive: boolean;
+		orderIndex: number;
+	}
 
 	let searchTerm = $state('');
+	let categories = $state<CategoryItem[]>([]);
+	let isLoading = $state(true);
 
-	const categories = [
-		{
-			id: '1001',
-			slug: 'reformas-reparos',
-			name: 'Reformas e Reparos',
-			desc: 'Eletricistas, encanadores, pedreiros e pintores.',
-			icon: Hammer,
-			servicesCount: 24,
-			badge: 'Mais Pedido'
-		},
-		{
-			id: '1002',
-			slug: 'assistencia-tecnica',
-			name: 'Assistência Técnica',
-			desc: 'Celulares, notebooks, TVs e eletrodomésticos.',
-			icon: Wrench,
-			servicesCount: 18,
-			badge: null
-		},
-		{
-			id: '1003',
-			slug: 'servicos-domesticos',
-			name: 'Serviços Domésticos',
-			desc: 'Diaristas, faxineiras, cozinheiras e passadeiras.',
-			icon: Home,
-			servicesCount: 12,
-			badge: 'Popular'
-		},
-		{
-			id: '1004',
-			slug: 'aulas-consultoria',
-			name: 'Aulas e Consultoria',
-			desc: 'Idiomas, reforço escolar, música e fitness.',
-			icon: BookOpen,
-			servicesCount: 15,
-			badge: null
-		},
-		{
-			id: '1005',
-			slug: 'design-tecnologia',
-			name: 'Design e Tecnologia',
-			desc: 'Criação de sites, logotipos, apps e marketing.',
-			icon: Laptop,
-			servicesCount: 20,
-			badge: null
-		},
-		{
-			id: '1006',
-			slug: 'eventos-festas',
-			name: 'Eventos e Festas',
-			desc: 'Buffet, fotografia, som, DJ e decoração.',
-			icon: PartyPopper,
-			servicesCount: 14,
-			badge: null
+	onMount(async () => {
+		try {
+			const res = await fetch(`${API_URL}/catalog/categories`);
+			if (res.ok) {
+				const json = await res.json();
+				categories = (json.data ?? []).filter((c: CategoryItem) => c.isActive !== false);
+			}
+		} finally {
+			isLoading = false;
 		}
-	];
+	});
+
+	let filteredCategories = $derived(
+		searchTerm.trim()
+			? categories.filter(c =>
+					c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+					(c.description && c.description.toLowerCase().includes(searchTerm.toLowerCase()))
+			  )
+			: categories
+	);
 </script>
 
 <!-- Hero Section Sólida -->
@@ -136,38 +109,39 @@
 		</div>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-			{#each categories as cat}
-				{@const IconComponent = cat.icon}
-				<a
-					href="/pedir-servico?cat={cat.slug}"
-					class="card bg-base-100 border-2 border-base-300 hover:border-primary transition-all p-6 rounded-xl group hover:shadow-md flex flex-col justify-between"
-				>
-					<div>
-						<div class="flex items-start justify-between mb-4">
-							<div class="p-3 bg-base-200 group-hover:bg-primary group-hover:text-primary-content rounded-lg transition-colors">
-								<IconComponent class="w-6 h-6" />
+			{#if isLoading}
+				<div class="col-span-3 text-center py-12">
+					<span class="loading loading-spinner loading-lg text-primary"></span>
+				</div>
+			{:else}
+				{#each filteredCategories as cat}
+					<a
+						href="/pedir-servico?cat={cat.slug}"
+						class="card bg-base-100 border-2 border-base-300 hover:border-primary transition-all p-6 rounded-xl group hover:shadow-md flex flex-col justify-between"
+					>
+						<div>
+							<div class="flex items-start justify-between mb-4">
+								<div class="p-3 bg-base-200 group-hover:bg-primary group-hover:text-primary-content rounded-lg transition-colors">
+									<CategoryIcon name={cat.icon || cat.slug} class="w-6 h-6" />
+								</div>
 							</div>
-							{#if cat.badge}
-								<span class="badge badge-sm badge-secondary font-bold">{cat.badge}</span>
-							{/if}
+
+							<h3 class="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
+								{cat.name}
+							</h3>
+							<p class="text-sm opacity-70 mb-4">
+								{cat.description || 'Especialistas prontos para atender você.'}
+							</p>
 						</div>
 
-						<h3 class="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
-							{cat.name}
-						</h3>
-						<p class="text-sm opacity-70 mb-4">
-							{cat.desc}
-						</p>
-					</div>
-
-					<div class="flex items-center justify-between pt-4 border-t border-base-200 text-xs font-semibold opacity-80">
-						<span>{cat.servicesCount} especialidades</span>
-						<span class="text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-							Solicitar <ArrowRight class="w-3.5 h-3.5" />
-						</span>
-					</div>
-				</a>
-			{/each}
+						<div class="flex items-center justify-between pt-4 border-t border-base-200 text-xs font-semibold opacity-80">
+							<span class="text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+								Solicitar <ArrowRight class="w-3.5 h-3.5" />
+							</span>
+						</div>
+					</a>
+				{/each}
+			{/if}
 		</div>
 	</div>
 </section>

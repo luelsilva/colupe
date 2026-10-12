@@ -1,10 +1,32 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { alert } from '$lib/components/dialogs/alerts.svelte';
+	import { APP_ERRORS } from '@colupe/shared';
+	import { API_URL } from '$lib/config/api';
 	import { CheckCircle2, MapPin, ClipboardList, Clock, Send } from 'lucide-svelte';
 
+	interface CategoryItem {
+		id: number;
+		name: string;
+		slug: string;
+		isActive?: boolean;
+	}
+
+	interface ServiceItem {
+		id: number;
+		name: string;
+		categoryId?: number;
+		leadCostCredits: number;
+		isActive?: boolean;
+	}
+
+	let categories = $state<CategoryItem[]>([]);
+	let allServices = $state<ServiceItem[]>([]);
+	let isLoadingCatalog = $state(true);
+
 	let step = $state(1);
-	let selectedCategory = $state('1001');
-	let selectedService = $state('2001');
+	let selectedCategory = $state<number | null>(null);
+	let selectedService = $state<number | null>(null);
 	let title = $state('');
 	let description = $state('');
 	let urgency = $state('medium');
@@ -19,42 +41,80 @@
 	let isSubmitting = $state(false);
 	let submitted = $state(false);
 
-	const servicesMap: Record<string, { id: string; name: string; cost: number }[]> = {
-		'1001': [
-			{ id: '2001', name: 'Eletricista', cost: 15 },
-			{ id: '2002', name: 'Encanador', cost: 15 },
-			{ id: '2003', name: 'Pintor Residencial', cost: 12 },
-			{ id: '2007', name: 'Pedreiro / Alvenaria', cost: 15 }
-		],
-		'1002': [
-			{ id: '2004', name: 'Conserto de Smartphone', cost: 10 },
-			{ id: '2008', name: 'Manutenção de Notebook / PC', cost: 12 },
-			{ id: '2009', name: 'Ar-Condicionado (Instalação/Limpeza)', cost: 15 }
-		],
-		'1003': [
-			{ id: '2005', name: 'Diarista / Faxina', cost: 10 },
-			{ id: '2010', name: 'Passadeira', cost: 8 }
-		],
-		'1005': [
-			{ id: '2006', name: 'Criação de Sites e Landing Pages', cost: 20 },
-			{ id: '2011', name: 'Designer Gráfico / Logotipo', cost: 15 }
-		]
-	};
+	onMount(async () => {
+		try {
+			const [catRes, svcRes] = await Promise.all([
+				fetch(`${API_URL}/catalog/categories`),
+				fetch(`${API_URL}/catalog/services`)
+			]);
+
+			if (catRes.ok) {
+				const json = await catRes.json();
+				categories = (json.data ?? []).filter((c: CategoryItem) => c.isActive !== false);
+				if (categories.length > 0) {
+					selectedCategory = categories[0].id;
+				}
+			}
+
+			if (svcRes.ok) {
+				const json = await svcRes.json();
+				allServices = (json.data ?? []).filter((s: ServiceItem) => s.isActive !== false);
+			}
+		} finally {
+			isLoadingCatalog = false;
+		}
+	});
+
+	let availableServices = $derived(
+		selectedCategory !== null
+			? allServices.filter(s => s.categoryId === selectedCategory)
+			: allServices
+	);
+
+	$effect(() => {
+		if (availableServices.length > 0 && (!selectedService || !availableServices.some(s => s.id === selectedService))) {
+			selectedService = availableServices[0].id;
+		}
+	});
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!title.trim() || !description.trim() || !clientName.trim() || !clientPhone.trim()) {
-			alert.error('Por favor, preencha todos os campos obrigatórios.');
+		if (!title.trim() || !description.trim() || !clientName.trim() || !clientPhone.trim() || !selectedService) {
+			alert.error(APP_ERRORS.REQUIRED_FIELDS);
 			return;
 		}
 
 		isSubmitting = true;
-		// Simulação de envio para a API
-		setTimeout(() => {
-			isSubmitting = false;
+		try {
+			const res = await fetch(`${API_URL}/requests`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					serviceId: selectedService,
+					title: title.trim(),
+					description: description.trim(),
+					city: city.trim(),
+					state: stateUf.trim(),
+					neighborhood: neighborhood.trim(),
+					addressFull: addressFull.trim() || `${neighborhood}, ${city} - ${stateUf}`,
+					urgency,
+					clientName: clientName.trim(),
+					clientEmail: clientEmail.trim(),
+					clientPhone: clientPhone.trim()
+				})
+			});
+
+			if (!res.ok) {
+				throw new Error();
+			}
+
 			submitted = true;
 			alert.success('Pedido publicado com sucesso! Em breve os profissionais entrarão em contato.');
-		}, 800);
+		} catch {
+			alert.error(APP_ERRORS.INTERNAL_SERVER_ERROR);
+		} finally {
+			isSubmitting = false;
+		}
 	}
 </script>
 
@@ -99,10 +159,9 @@
 								bind:value={selectedCategory}
 								class="select select-bordered w-full"
 							>
-								<option value="1001">Reformas e Reparos</option>
-								<option value="1002">Assistência Técnica</option>
-								<option value="1003">Serviços Domésticos</option>
-								<option value="1005">Design e Tecnologia</option>
+								{#each categories as cat}
+									<option value={cat.id}>{cat.name}</option>
+								{/each}
 							</select>
 						</div>
 
@@ -112,7 +171,7 @@
 								bind:value={selectedService}
 								class="select select-bordered w-full"
 							>
-								{#each (servicesMap[selectedCategory] || []) as serv}
+								{#each availableServices as serv}
 									<option value={serv.id}>{serv.name}</option>
 								{/each}
 							</select>

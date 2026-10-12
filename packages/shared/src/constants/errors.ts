@@ -21,6 +21,19 @@ export const APP_ERRORS = {
   INVALID_SERVICES_SELECTION: "Selecione pelo menos um serviço ativo que você realiza.",
   INVALID_LOCATION: "Informe sua cidade e estado de atendimento.",
   INVALID_CEP: "Informe um CEP válido com 8 dígitos.",
+  CATEGORY_NOT_FOUND: "Categoria não encontrada.",
+  SUBCATEGORY_NOT_FOUND: "Subcategoria não encontrada.",
+  SERVICE_NOT_FOUND: "Serviço não encontrado.",
+  REQUEST_NOT_FOUND: "Pedido de serviço não encontrado.",
+  REQUIRED_FIELDS: "Por favor, preencha todos os campos obrigatórios.",
+  CATEGORY_STATUS_UPDATE_ERROR: "Erro ao atualizar status da categoria.",
+  SUBCATEGORY_STATUS_UPDATE_ERROR: "Erro ao atualizar status da subcategoria.",
+  SERVICE_STATUS_UPDATE_ERROR: "Erro ao atualizar status do serviço.",
+  CATEGORY_FETCH_ERROR: "Erro ao carregar categorias.",
+  SUBCATEGORY_FETCH_ERROR: "Erro ao carregar subcategorias.",
+  SERVICE_FETCH_ERROR: "Erro ao carregar serviços.",
+  CEP_NOT_FOUND: "CEP não encontrado.",
+  CEP_LOOKUP_ERROR: "Não foi possível consultar o CEP automaticamente.",
 } as const;
 
 

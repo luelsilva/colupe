@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { alert } from '$lib/components/dialogs/alerts.svelte';
 	import { validateDocument, APP_ERRORS } from '@colupe/shared';
+	import { API_URL } from '$lib/config/api';
 	import {
 		Phone,
 		User,
@@ -83,8 +84,8 @@
 		try {
 			isLoadingCatalog = true;
 			const [catRes, svcRes] = await Promise.all([
-				fetch('http://localhost:3333/catalog/categories').catch(() => null),
-				fetch('http://localhost:3333/catalog/services').catch(() => null)
+				fetch(`${API_URL}/catalog/categories`).catch(() => null),
+				fetch(`${API_URL}/catalog/services`).catch(() => null)
 			]);
 
 			if (catRes?.ok) {
@@ -158,7 +159,7 @@
 				if (res.ok) {
 					const data = await res.json();
 					if (data.erro) {
-						cepError = 'CEP não encontrado.';
+						cepError = APP_ERRORS.CEP_NOT_FOUND;
 						city = '';
 						stateUf = '';
 						neighborhood = '';
@@ -169,7 +170,7 @@
 					}
 				}
 			} catch {
-				cepError = 'Não foi possível consultar o CEP automaticamente.';
+				cepError = APP_ERRORS.CEP_LOOKUP_ERROR;
 			} finally {
 				isLoadingCep = false;
 			}

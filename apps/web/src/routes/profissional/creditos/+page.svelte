@@ -1,60 +1,53 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Coins, CheckCircle, ArrowLeft, ShieldCheck, Zap, History } from 'lucide-svelte';
 	import { alert, confirm } from '@colupe/ui';
+	import { generateSnowflakeId } from '@colupe/shared';
+	import { API_URL } from '$lib/config/api';
+
+	interface PackageItem {
+		id: number;
+		name: string;
+		creditsAmount: number;
+		bonusCredits: number;
+		priceCents: number;
+		orderIndex: number;
+	}
 
 	let userCredits = $state(45);
 	let isPurchasing = $state(false);
+	let packages = $state<PackageItem[]>([]);
+	let isLoadingPackages = $state(true);
 
-	const packages = [
-		{
-			id: 4001,
-			name: 'Pacote Básico',
-			price: 'R$ 49,90',
-			priceCents: 4990,
-			colupas: 50,
-			bonus: 0,
-			description: 'Ideal para quem está começando e quer testar a plataforma.',
-			popular: false
-		},
-		{
-			id: 4002,
-			name: 'Pacote Profissional',
-			price: 'R$ 99,90',
-			priceCents: 9990,
-			colupas: 120,
-			bonus: 15,
-			description: 'Melhor custo-benefício com 15 Colupas de bônus.',
-			popular: true
-		},
-		{
-			id: 4003,
-			name: 'Pacote Premium',
-			price: 'R$ 199,90',
-			priceCents: 19990,
-			colupas: 300,
-			bonus: 60,
-			description: 'Para empresas e alta demanda com 60 Colupas de bônus.',
-			popular: false
+	onMount(async () => {
+		try {
+			const res = await fetch(`${API_URL}/catalog/packages`);
+			if (res.ok) {
+				const json = await res.json();
+				packages = json.data ?? [];
+			}
+		} finally {
+			isLoadingPackages = false;
 		}
-	];
+	});
 
 	let transactions = $state([
 		{
-			id: 'tx-101',
+			id: generateSnowflakeId(),
 			date: '03/10/2026 14:20',
 			description: 'Bônus de Boas-Vindas no Cadastro',
 			amount: '+20 Colupas',
 			type: 'bonus'
 		},
 		{
-			id: 'tx-102',
+			id: generateSnowflakeId(),
 			date: '03/10/2026 16:45',
 			description: 'Recarga - Pacote Básico',
 			amount: '+50 Colupas',
 			type: 'purchase'
 		},
 		{
-			id: 'tx-103',
+			id: generateSnowflakeId(),
 			date: '03/10/2026 17:10',
 			description: 'Desbloqueio de Contato: Instalação de Ar Condicionado',
 			amount: '-25 Colupas',
@@ -62,12 +55,17 @@
 		}
 	]);
 
-	async function buyPackage(pkg: typeof packages[0]) {
-		const totalColupas = pkg.colupas + pkg.bonus;
+	function formatPrice(cents: number) {
+		return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+	}
+
+	async function buyPackage(pkg: PackageItem) {
+		const totalColupas = pkg.creditsAmount + pkg.bonusCredits;
+		const formattedPrice = formatPrice(pkg.priceCents);
 		const ok = await confirm.show({
 			title: `Adquirir ${pkg.name}`,
-			message: `Confirmar a compra de ${totalColupas} Colupas (${pkg.colupas} + ${pkg.bonus} bônus) pelo valor de ${pkg.price}?`,
-			confirmText: `Pagar ${pkg.price}`,
+			message: `Confirmar a compra de ${totalColupas} Colupas (${pkg.creditsAmount} + ${pkg.bonusCredits} bônus) pelo valor de ${formattedPrice}?`,
+			confirmText: `Pagar ${formattedPrice}`,
 			cancelText: 'Cancelar'
 		});
 
@@ -76,7 +74,7 @@
 			setTimeout(() => {
 				userCredits += totalColupas;
 				transactions.unshift({
-					id: `tx-${Date.now()}`,
+					id: generateSnowflakeId(),
 					date: new Date().toLocaleString('pt-BR'),
 					description: `Recarga - ${pkg.name}`,
 					amount: `+${totalColupas} Colupas`,
@@ -84,7 +82,7 @@
 				});
 				isPurchasing = false;
 				alert.success(`Recarga concluída! Você recebeu ${totalColupas} Colupas.`);
-			}, 800);
+			}, 500);
 		}
 	}
 </script>
@@ -123,55 +121,64 @@
 
 	<!-- Grade de Pacotes -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-		{#each packages as pkg}
-			<div class="card bg-base-100 {pkg.popular ? 'border-2 border-primary shadow-xl' : 'border-2 border-base-300 shadow-sm'} flex flex-col justify-between">
-				<div class="card-body">
-					{#if pkg.popular}
-						<div class="badge badge-primary font-bold text-xs uppercase self-start mb-1">Mais Escolhido</div>
-					{/if}
-
-					<h2 class="card-title text-xl font-black">{pkg.name}</h2>
-					<p class="text-3xl font-black text-primary my-2">{pkg.price}</p>
-
-					<div class="bg-base-200 p-3 rounded-lg my-3 border border-base-300">
-						<span class="text-xs uppercase font-bold opacity-70 block">Você recebe:</span>
-						<span class="text-xl font-black text-warning">
-							{pkg.colupas + pkg.bonus} Colupas
-						</span>
-						{#if pkg.bonus > 0}
-							<span class="text-xs badge badge-warning font-bold ml-1">+{pkg.bonus} bônus</span>
-						{/if}
-					</div>
-
-					<p class="text-xs opacity-75 leading-relaxed mb-4">{pkg.description}</p>
-
-					<div class="space-y-2 text-xs font-semibold opacity-90 border-t border-base-300 pt-3">
-						<div class="flex items-center gap-1.5">
-							<CheckCircle class="w-4 h-4 text-success shrink-0" />
-							<span>Sem mensalidade ou anuidade</span>
-						</div>
-						<div class="flex items-center gap-1.5">
-							<CheckCircle class="w-4 h-4 text-success shrink-0" />
-							<span>Colupas não expiram</span>
-						</div>
-						<div class="flex items-center gap-1.5">
-							<CheckCircle class="w-4 h-4 text-success shrink-0" />
-							<span>Liberação imediata</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="p-6 pt-0">
-					<button
-						onclick={() => buyPackage(pkg)}
-						disabled={isPurchasing}
-						class="btn {pkg.popular ? 'btn-primary' : 'btn-outline'} btn-block font-bold"
-					>
-						Comprar {pkg.name}
-					</button>
-				</div>
+		{#if isLoadingPackages}
+			<div class="col-span-3 text-center py-12">
+				<span class="loading loading-spinner loading-lg text-primary"></span>
 			</div>
-		{/each}
+		{:else}
+			{#each packages as pkg}
+				{@const isPopular = pkg.orderIndex === 2}
+				<div class="card bg-base-100 {isPopular ? 'border-2 border-primary shadow-xl' : 'border-2 border-base-300 shadow-sm'} flex flex-col justify-between">
+					<div class="card-body">
+						{#if isPopular}
+							<div class="badge badge-primary font-bold text-xs uppercase self-start mb-1">Mais Escolhido</div>
+						{/if}
+
+						<h2 class="card-title text-xl font-black">{pkg.name}</h2>
+						<p class="text-3xl font-black text-primary my-2">{formatPrice(pkg.priceCents)}</p>
+
+						<div class="bg-base-200 p-3 rounded-lg my-3 border border-base-300">
+							<span class="text-xs uppercase font-bold opacity-70 block">Você recebe:</span>
+							<span class="text-xl font-black text-warning">
+								{pkg.creditsAmount + pkg.bonusCredits} Colupas
+							</span>
+							{#if pkg.bonusCredits > 0}
+								<span class="text-xs badge badge-warning font-bold ml-1">+{pkg.bonusCredits} bônus</span>
+							{/if}
+						</div>
+
+						<p class="text-xs opacity-75 leading-relaxed mb-4">
+							{pkg.creditsAmount} Colupas para desbloquear novos contatos.
+						</p>
+
+						<div class="space-y-2 text-xs font-semibold opacity-90 border-t border-base-300 pt-3">
+							<div class="flex items-center gap-1.5">
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
+								<span>Sem mensalidade ou anuidade</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
+								<span>Colupas não expiram</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
+								<span>Liberação imediata</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="p-6 pt-0">
+						<button
+							onclick={() => buyPackage(pkg)}
+							disabled={isPurchasing}
+							class="btn {isPopular ? 'btn-primary' : 'btn-outline'} btn-block font-bold"
+						>
+							Comprar {pkg.name}
+						</button>
+					</div>
+				</div>
+			{/each}
+		{/if}
 	</div>
 
 	<!-- Informações e Dúvidas -->

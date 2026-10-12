@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { CatalogService } from "./catalog.service";
+import { APP_ERRORS } from "@colupe/shared";
 
 export const catalogRoutes = new Elysia({ prefix: "/catalog" })
   .get(
@@ -23,7 +24,7 @@ export const catalogRoutes = new Elysia({ prefix: "/catalog" })
       const data = await CatalogService.toggleCategory(id);
       if (!data) {
         set.status = 404;
-        return { error: "Categoria não encontrada" };
+        return { error: APP_ERRORS.CATEGORY_NOT_FOUND };
       }
       return { data };
     },
@@ -57,7 +58,7 @@ export const catalogRoutes = new Elysia({ prefix: "/catalog" })
       const data = await CatalogService.toggleSubcategory(id);
       if (!data) {
         set.status = 404;
-        return { error: "Subcategoria não encontrada" };
+        return { error: APP_ERRORS.SUBCATEGORY_NOT_FOUND };
       }
       return { data };
     },
@@ -91,7 +92,7 @@ export const catalogRoutes = new Elysia({ prefix: "/catalog" })
       const data = await CatalogService.toggleService(id);
       if (!data) {
         set.status = 404;
-        return { error: "Serviço não encontrado" };
+        return { error: APP_ERRORS.SERVICE_NOT_FOUND };
       }
       return { data };
     },
@@ -101,6 +102,20 @@ export const catalogRoutes = new Elysia({ prefix: "/catalog" })
         tags: ["Catálogo"],
         summary: "Ativar/Desativar serviço",
         description: "Alterna o status isActive do serviço informado.",
+      },
+    }
+  )
+  .get(
+    "/packages",
+    async () => {
+      const data = await CatalogService.getPackages();
+      return { data };
+    },
+    {
+      detail: {
+        tags: ["Catálogo"],
+        summary: "Listar pacotes de créditos",
+        description: "Retorna todos os pacotes ativos de Colupas disponíveis para compra.",
       },
     }
   );
