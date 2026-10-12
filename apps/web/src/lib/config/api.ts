@@ -6,6 +6,8 @@
  * ==============================================================================
  */
 
+import { env } from '$env/dynamic/public';
+
 function requirePublicEnv(key: string, value: string | undefined): string {
   if (!value || value.trim() === "") {
     console.error(`\n======================================================`);
@@ -17,7 +19,13 @@ function requirePublicEnv(key: string, value: string | undefined): string {
   return value.trim();
 }
 
-export const API_URL = requirePublicEnv(
-  "PUBLIC_API_URL",
-  import.meta.env.PUBLIC_API_URL
-);
+export function getApiUrl(): string {
+  const value =
+    (typeof env !== "undefined" ? env.PUBLIC_API_URL : undefined) ||
+    (typeof process !== "undefined" ? process.env?.PUBLIC_API_URL : undefined) ||
+    (typeof import.meta !== "undefined" ? (import.meta as any).env?.PUBLIC_API_URL : undefined);
+
+  return requirePublicEnv("PUBLIC_API_URL", value);
+}
+
+export const API_URL = getApiUrl();
