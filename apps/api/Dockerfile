@@ -2,7 +2,7 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 
 COPY . .
-RUN bun install --frozen-lockfile
+RUN bun install
 
 FROM oven/bun:1-slim AS runner
 

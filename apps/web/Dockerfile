@@ -2,7 +2,7 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 
 COPY . .
-RUN bun install --frozen-lockfile
+RUN bun install
 RUN bun --filter @colupe/web build
 
 FROM oven/bun:1-slim AS runner
